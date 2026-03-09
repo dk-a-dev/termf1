@@ -86,3 +86,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.archive.outputs.asset }}
+          generate_release_notes: false
