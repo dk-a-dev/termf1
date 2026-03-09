@@ -9,8 +9,24 @@ permissions:
   contents: write
 
 jobs:
+  # ── Stage 1: create the GitHub Release once ──────────────────────────────
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+
+  # ── Stage 2: build each platform and upload its asset ────────────────────
   build:
     name: Build ${{ matrix.suffix }}
+    needs: create-release
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -48,10 +64,9 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           VERSION="${GITHUB_REF_NAME}"
-          BINARY="termf1${{ matrix.ext }}"
           go build \
             -ldflags="-s -w -X main.version=${VERSION}" \
-            -o "${BINARY}" .
+            -o "termf1${{ matrix.ext }}" .
 
       - name: Package archive
         id: archive
@@ -67,8 +82,7 @@ jobs:
             echo "asset=${ARCHIVE}.tar.gz" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload to release
+      - name: Upload asset
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.archive.outputs.asset }}
-          generate_release_notes: true
