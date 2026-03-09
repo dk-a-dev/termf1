@@ -1,3 +1,4 @@
 termf1
+termf1.exe
 .env
-go.sum
+dist/

@@ -9,8 +9,12 @@ import (
 	"github.com/devkeshwani/termf1/internal/ui"
 )
 
+// version is set at build time via -ldflags "-X main.version=v1.2.3"
+var version = "dev"
+
 func main() {
 	cfg := config.Load()
+	cfg.Version = version
 
 	p := tea.NewProgram(
 		ui.NewApp(cfg),

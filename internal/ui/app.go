@@ -269,6 +269,10 @@ func (a *App) renderHeader() string {
 		Padding(0, 1).
 		Render("🏎 termf1")
 
+	// Version badge
+	v := a.cfg.Version
+	verBadge := styles.DimStyle.Render(" " + v + " ")
+
 	// Tabs
 	tabs := make([]string, len(tabLabels))
 	for i, label := range tabLabels {
@@ -280,8 +284,8 @@ func (a *App) renderHeader() string {
 	}
 	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 
-	// Top row: brand + tabs
-	topRow := lipgloss.JoinHorizontal(lipgloss.Top, brand, "  ", tabRow)
+	// Top row: brand + version + tabs
+	topRow := lipgloss.JoinHorizontal(lipgloss.Top, brand, verBadge, "  ", tabRow)
 
 	// Separator line
 	sep := styles.Divider.Render(strings.Repeat("─", a.width))

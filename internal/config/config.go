@@ -1,12 +1,16 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 // Config holds all runtime configuration loaded from environment variables.
 type Config struct {
 	GroqAPIKey  string
 	GroqModel   string
 	RefreshRate int // seconds between live-data refreshes
+	Version     string
 }
 
 func Load() *Config {
@@ -26,7 +30,7 @@ func getEnv(key, fallback string) string {
 
 func getEnvInt(key string, fallback int) int {
 	if v := os.Getenv(key); v != "" {
-		if i := parseInt(v); i != 0 {
+		if i, err := strconv.Atoi(v); err == nil && i != 0 {
 			return i
 		}
 	}

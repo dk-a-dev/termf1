@@ -20,6 +20,27 @@ A full-featured **Formula 1 terminal dashboard** built with Go and [Charm](https
 
 ## Install
 
+### Option 1 — Download pre-built binary (recommended)
+
+Go to [Releases](https://github.com/devkeshwani/termf1/releases/latest) and download the archive for your platform:
+
+| Platform | File |
+|----------|------|
+| macOS (Apple Silicon) | `termf1-vX.Y.Z-darwin-arm64.tar.gz` |
+| macOS (Intel) | `termf1-vX.Y.Z-darwin-amd64.tar.gz` |
+| Linux x86-64 | `termf1-vX.Y.Z-linux-amd64.tar.gz` |
+| Linux ARM64 | `termf1-vX.Y.Z-linux-arm64.tar.gz` |
+| Windows x86-64 | `termf1-vX.Y.Z-windows-amd64.zip` |
+
+```bash
+# macOS / Linux example
+tar xzf termf1-vX.Y.Z-darwin-arm64.tar.gz
+export GROQ_API_KEY=your_key_here
+./termf1
+```
+
+### Option 2 — Build from source
+
 ```bash
 git clone https://github.com/devkeshwani/termf1
 cd termf1
@@ -28,10 +49,17 @@ source .env
 make run
 ```
 
-Or install the binary globally:
+Install globally to `$GOPATH/bin`:
 
 ```bash
-make install
+make install   # then just: termf1
+```
+
+### Option 3 — `go install` (requires Go 1.22+)
+
+```bash
+export GROQ_API_KEY=your_key_here
+go install github.com/devkeshwani/termf1@latest
 termf1
 ```
 
