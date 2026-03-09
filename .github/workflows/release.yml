@@ -9,21 +9,15 @@ permissions:
   contents: write
 
 jobs:
-  # ── Stage 1: create the GitHub Release once ──────────────────────────────
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create.outputs.upload_url }}
     steps:
       - name: Create release
-        id: create
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
-          draft: false
+          generate_release_notes: false
 
-  # ── Stage 2: build each platform and upload its asset ────────────────────
   build:
     name: Build ${{ matrix.suffix }}
     needs: create-release
@@ -63,27 +57,41 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
         run: |
-          VERSION="${GITHUB_REF_NAME}"
           go build \
-            -ldflags="-s -w -X main.version=${VERSION}" \
+            -ldflags="-s -w -X main.version=${GITHUB_REF_NAME}" \
             -o "termf1${{ matrix.ext }}" .
 
       - name: Package archive
         id: archive
         run: |
-          VERSION="${GITHUB_REF_NAME}"
-          BINARY="termf1${{ matrix.ext }}"
-          ARCHIVE="termf1-${VERSION}-${{ matrix.suffix }}"
+          ARCHIVE="termf1-${GITHUB_REF_NAME}-${{ matrix.suffix }}"
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            zip "${ARCHIVE}.zip" "${BINARY}" README.md .env.example
+            zip "${ARCHIVE}.zip" "termf1${{ matrix.ext }}" README.md .env.example
             echo "asset=${ARCHIVE}.zip" >> "$GITHUB_OUTPUT"
           else
-            tar czf "${ARCHIVE}.tar.gz" "${BINARY}" README.md .env.example
+            tar czf "${ARCHIVE}.tar.gz" "termf1${{ matrix.ext }}" README.md .env.example
             echo "asset=${ARCHIVE}.tar.gz" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload asset
+      - name: Store artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.archive.outputs.asset }}
+          path: ${{ steps.archive.outputs.asset }}
+
+  upload:
+    name: Upload release assets
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Upload all assets
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.archive.outputs.asset }}
+          files: dist/*
           generate_release_notes: false
