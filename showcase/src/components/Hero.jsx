@@ -333,7 +333,7 @@ export default function Hero() {
 
   const handleCarPhase = useCallback((phase) => {
     phaseRef.current = phase
-    if (phase === 'curvefast') {
+    if (phase === 'slowdown') {
       setUiPhase('turning')
     } else if (phase === 'exit') {
       setTimeout(() => setUiPhase('revealed'), 400)

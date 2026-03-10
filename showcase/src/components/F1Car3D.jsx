@@ -16,9 +16,9 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 const LIGHTS_OFFSET  = 0.0   // wait time before car appears
-const APPROACH_END   = 1.5   // end of nose-first rush (1.5 s approach)
-const SLOWDOWN_END   = 2.4   // end of side-profile reveal (0.9 s)
-const CURVEFAST_END  = 3.2   // end of hard banking (0.8 s)
+const APPROACH_END   = 1.3   // car rushes to center of screen
+const SPIN_END       = 2.4   // 360° spin showcase at center (1.1 s)
+const EXIT_START     = 2.4   // blast off right
 
 export default function F1Car3D({ onPhaseChange }) {
   const mountRef  = useRef(null)
@@ -131,12 +131,12 @@ export default function F1Car3D({ onPhaseChange }) {
     let   phase = ''
     let   alive = true
 
-    const easeInCubic    = (t) => t * t * t
-    const easeInOutCubic = (t) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-
-    // Easing that shoots up faster then slows down (great for rotation leading position)
-    const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4)
+    // Smoother quintic easings for fluid motion
+    const easeInQuint     = (t) => t * t * t * t * t
+    const easeInOutQuint  = (t) =>
+      t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2
+    const easeOutQuint    = (t) => 1 - Math.pow(1 - t, 5)
+    const easeInOutSine   = (t) => -(Math.cos(Math.PI * t) - 1) / 2
 
     const setPhase = (p) => {
       if (phase === p) return
@@ -159,84 +159,70 @@ export default function F1Car3D({ onPhaseChange }) {
         rimRed.intensity = 4
 
       } else if (t < APPROACH_END) {
-        // ── APPROACH: originate from center under lights, curl out left, sweep toward camera (1.5 s) ──
+        // ── APPROACH: rush straight to center of screen ──
         setPhase('approach')
-        const p  = easeInCubic((t - LIGHTS_OFFSET) / (APPROACH_END - LIGHTS_OFFSET))
+        const raw = (t - LIGHTS_OFFSET) / (APPROACH_END - LIGHTS_OFFSET)
+        const p   = easeInOutQuint(raw)
         
-        // Starts at x=0, wide to x=-12 mid-way, returns to x=0 at the end
+        // Slight S-curve but ends dead-center (x≈0, z≈2)
         const outCurve = Math.sin(p * Math.PI)
-        carGroup.position.set(-12 * outCurve, 0, -55 + 57 * p)
+        const yBob = Math.sin(p * Math.PI * 2) * 0.06
+        carGroup.position.set(-6 * outCurve, yBob, -55 + 57 * p)
         
-        // Starts straight, turns nose out left during curl, straightens exactly to 0 at the end
-        const yaw = -Math.sin(p * Math.PI) * (Math.PI / 8)
-        carGroup.rotation.set(0, yaw, 0)
+        const yaw  = -Math.sin(p * Math.PI) * (Math.PI / 8)
+        const roll =  Math.sin(p * Math.PI) * 0.04
+        carGroup.rotation.set(0, yaw, roll)
 
-        const glow = Math.max(0, (p - 0.4) / 0.6)
+        const glow = Math.max(0, (p - 0.3) / 0.7)
         bodyMaterials.forEach(m => {
           m.emissive.setHex(0xe8002d)
-          m.emissiveIntensity = glow * 0.40
+          m.emissiveIntensity = glow * 0.45
         })
-        under.intensity  = 3  + glow * 6
-        rimRed.intensity = 12 + glow * 16
+        under.intensity  = 3  + glow * 8
+        rimRed.intensity = 12 + glow * 18
 
-      } else if (t < SLOWDOWN_END) {
-        // ── SLOWDOWN: car brakes, pivots to reveal sleek left-flank (0.9 s) ──
+      } else if (t < SPIN_END) {
+        // ── SPIN 360°: car holds at center, quick full rotation showcase ──
         setPhase('slowdown')
-        const sp = (t - APPROACH_END) / (SLOWDOWN_END - APPROACH_END)
-        const se = easeInOutCubic(sp)
-        const rotE = easeOutQuart(sp) // Rotation leads position
+        const sp = (t - APPROACH_END) / (SPIN_END - APPROACH_END)
+        const se = easeInOutQuint(sp)
 
-        // Flows right much faster
-        carGroup.position.x =  se * 7.5
-        carGroup.position.y =  se * 0.3
-        carGroup.position.z =  2.0 - se * 1.5
-        
-        // Nose lifts slightly under aerodynamic load/turn
-        const pitch = Math.sin(sp * Math.PI) * 0.08
-        // Slight wobble on the roll
-        const wobble = Math.sin(sp * Math.PI * 2) * 0.02
+        // Stay dead center (x=0), float up slightly mid-spin
+        carGroup.position.x = 0
+        carGroup.position.y = Math.sin(sp * Math.PI) * 0.35
+        carGroup.position.z = 2.0
 
-        carGroup.rotation.x = pitch
-        carGroup.rotation.y =  rotE * Math.PI * 0.48   // Nose turns ahead of movement
-        carGroup.rotation.z = -rotE * 0.15 + wobble    // Banks into turn with slight wobble
+        // Full 360° spin — starts nose-on (yaw≈0), completes full revolution
+        // Spin from nose-on (0) to facing right (-Math.PI/2)
+        const spinAngle = se * (Math.PI * 2 + Math.PI / 2)
+        carGroup.rotation.x = Math.sin(sp * Math.PI) * 0.04
+        carGroup.rotation.y = spinAngle
+        carGroup.rotation.z = Math.sin(sp * Math.PI * 2) * 0.05
 
+        // Pulsing glow during spin
+        const pulse = 0.18 + Math.sin(sp * Math.PI * 4) * 0.12
         bodyMaterials.forEach(m => {
           m.emissive.setHex(0xe8002d)
-          m.emissiveIntensity = (1 - se) * 0.30
+          m.emissiveIntensity = pulse
         })
-        under.intensity  = 3
-        rimRed.intensity = 12
-
-      } else if (t < CURVEFAST_END) {
-        // ── CURVEFAST: hard banking right, accelerates into the turn (0.8 s) ──
-        setPhase('curvefast')
-        const cp = (t - SLOWDOWN_END) / (CURVEFAST_END - SLOWDOWN_END)
-        const ce = easeInCubic(cp)
-        const rotE = easeOutQuart(cp)
-
-        carGroup.position.x =  7.5 + ce * 8.5
-        carGroup.position.y =  0.3 + ce * 0.6
-        carGroup.position.z =  0.5 + ce * 2.5
-        
-        carGroup.rotation.x = 0
-        carGroup.rotation.y =  Math.PI * 0.48 + rotE * Math.PI * 0.12  // continue rotating
-        carGroup.rotation.z = -0.15 - rotE * 0.10                      // max banking
-
-        bodyMaterials.forEach(m => {
-          m.emissive.setHex(0xe8002d)
-          m.emissiveIntensity = ce * 0.18
-        })
-        rimRed.intensity = 12 + ce * 18
+        rimRed.intensity = 14 + Math.sin(sp * Math.PI * 2) * 10
+        under.intensity  = 3  + Math.sin(sp * Math.PI) * 6
 
       } else {
-        // ── EXIT: quadratic blast off-screen right ──
+        // ── EXIT: blast off-screen right after the spin ──
         setPhase('exit')
-        const ep = t - CURVEFAST_END
-        carGroup.position.x =  16.0 + ep * ep * 125
-        carGroup.position.y =   0.9 + ep * 2.2
-        carGroup.position.z =   3.0 + ep * 3.0
-        carGroup.rotation.y =  Math.PI * 0.60
-        carGroup.rotation.z = -0.22 - ep * 0.08
+        const ep = t - EXIT_START
+        const exitEase = easeInQuint(Math.min(ep / 0.6, 1))
+
+        // Rockets right from center (x=0)
+        carGroup.position.x =  exitEase * 25 + ep * ep * 80
+        carGroup.position.y =  Math.max(0, 0.35 * (1 - ep * 2)) + ep * 0.8
+        carGroup.position.z =  2.0 + ep * 2.5
+        // Nose points right toward exit
+        // Start exit facing right (-Math.PI/2), then tilt slightly as it blasts off
+        carGroup.rotation.y = Math.PI / 2 + exitEase * Math.PI * 0.55
+        carGroup.rotation.z = -exitEase * 0.16
+        carGroup.rotation.x =  0
       }
 
       renderer.render(scene, camera)

@@ -1,63 +1,65 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 
-/* ── Pure-CSS pixel art: bikini girl carrying a chequered flag ─────────────
+/* ── Pure-CSS pixel art: bikini grid girl with chequered flag ──────────────
    Each "pixel" is a 3×3 CSS box-shadow on a tiny 1×1 element.
    Walking is done by toggling between two leg frames via CSS animation.    */
 
 const PX = 3 // pixel size
 const flagPixels = [
-  // Chequered flag (8×6 grid, offset right from her hand)
-  // row 0
-  [10,0,'#fff'],[11,0,'#222'],[12,0,'#fff'],[13,0,'#222'],[14,0,'#fff'],[15,0,'#222'],
-  // row 1
-  [10,1,'#222'],[11,1,'#fff'],[12,1,'#222'],[13,1,'#fff'],[14,1,'#222'],[15,1,'#fff'],
-  // row 2
-  [10,2,'#fff'],[11,2,'#222'],[12,2,'#fff'],[13,2,'#222'],[14,2,'#fff'],[15,2,'#222'],
-  // row 3
-  [10,3,'#222'],[11,3,'#fff'],[12,3,'#222'],[13,3,'#fff'],[14,3,'#222'],[15,3,'#fff'],
-  // pole
-  [9,0,'#888'],[9,1,'#888'],[9,2,'#888'],[9,3,'#888'],[9,4,'#888'],[9,5,'#888'],[9,6,'#888'],[9,7,'#888'],
+  // Chequered flag (6×5 grid, offset right from her hand)
+  [11,0,'#fff'],[12,0,'#222'],[13,0,'#fff'],[14,0,'#222'],[15,0,'#fff'],[16,0,'#222'],
+  [11,1,'#222'],[12,1,'#fff'],[13,1,'#222'],[14,1,'#fff'],[15,1,'#222'],[16,1,'#fff'],
+  [11,2,'#fff'],[12,2,'#222'],[13,2,'#fff'],[14,2,'#222'],[15,2,'#fff'],[16,2,'#222'],
+  [11,3,'#222'],[12,3,'#fff'],[13,3,'#222'],[14,3,'#fff'],[15,3,'#222'],[16,3,'#fff'],
+  [11,4,'#fff'],[12,4,'#222'],[13,4,'#fff'],[14,4,'#222'],[15,4,'#fff'],[16,4,'#222'],
+  // Flag pole
+  [10,0,'#aaa'],[10,1,'#999'],[10,2,'#888'],[10,3,'#888'],[10,4,'#777'],
+  [10,5,'#777'],[10,6,'#666'],[10,7,'#666'],[10,8,'#555'],
 ]
 
 const bodyPixels = [
-  // Hair (dark brown)
-  [4,0,'#3B1F0B'],[5,0,'#3B1F0B'],[6,0,'#3B1F0B'],
-  [3,1,'#3B1F0B'],[4,1,'#3B1F0B'],[5,1,'#3B1F0B'],[6,1,'#3B1F0B'],[7,1,'#3B1F0B'],
-  // Face (skin)
-  [4,2,'#F5C5A3'],[5,2,'#F5C5A3'],[6,2,'#F5C5A3'],
-  [4,3,'#F5C5A3'],[5,3,'#F5C5A3'],[6,3,'#F5C5A3'],
-  // Eyes
-  [4,2,'#222'],[6,2,'#222'],
+  // Hair (flowing dark brown, slightly longer for a feminine look)
+  [4,0,'#3B1F0B'],[5,0,'#3B1F0B'],[6,0,'#3B1F0B'],[7,0,'#3B1F0B'],
+  [3,1,'#3B1F0B'],[4,1,'#3B1F0B'],[5,1,'#3B1F0B'],[6,1,'#3B1F0B'],[7,1,'#3B1F0B'],[8,1,'#3B1F0B'],
+  [3,2,'#3B1F0B'],[8,2,'#3B1F0B'], // hair sides framing face
+  // Face (skin tone)
+  [4,2,'#F5C5A3'],[5,2,'#F5C5A3'],[6,2,'#F5C5A3'],[7,2,'#F5C5A3'],
+  [4,3,'#F5C5A3'],[5,3,'#F5C5A3'],[6,3,'#F5C5A3'],[7,3,'#F5C5A3'],
+  // Eyes (dark) + smile
+  [5,2,'#222'],[7,2,'#222'],
+  [5,3,'#E06060'],[6,3,'#E06060'], // lips/smile
   // Neck
-  [5,4,'#F5C5A3'],
+  [5,4,'#F5C5A3'],[6,4,'#F5C5A3'],
   // Bikini top (red)
-  [4,5,'#E8002D'],[5,5,'#E8002D'],[6,5,'#E8002D'],
+  [4,5,'#E8002D'],[5,5,'#C70025'],[6,5,'#C70025'],[7,5,'#E8002D'],
+  [3,5,'#F5C5A3'], // shoulder
   // Torso (skin)
-  [4,6,'#F5C5A3'],[5,6,'#F5C5A3'],[6,6,'#F5C5A3'],
-  [4,7,'#F5C5A3'],[5,7,'#F5C5A3'],[6,7,'#F5C5A3'],
+  [4,6,'#F5C5A3'],[5,6,'#F5C5A3'],[6,6,'#F5C5A3'],[7,6,'#F5C5A3'],
+  [4,7,'#F5C5A3'],[5,7,'#F5C5A3'],[6,7,'#F5C5A3'],[7,7,'#F5C5A3'],
   // Bikini bottom (red)
-  [4,8,'#E8002D'],[5,8,'#E8002D'],[6,8,'#E8002D'],
-  // Arm holding flag (skin, reaching right toward pole at x=9)
-  [7,5,'#F5C5A3'],[8,5,'#F5C5A3'],[9,5,'#F5C5A3'],
-  // Other arm (skin, left side)
-  [3,5,'#F5C5A3'],[3,6,'#F5C5A3'],
+  [4,8,'#E8002D'],[5,8,'#C70025'],[6,8,'#C70025'],[7,8,'#E8002D'],
+  // Arm holding flag (reaching right toward pole at x=10)
+  [8,5,'#F5C5A3'],[9,5,'#F5C5A3'],[10,5,'#F5C5A3'],
+  [8,6,'#F5C5A3'],
+  // Other arm resting (left side)
+  [3,6,'#F5C5A3'],[2,6,'#F5C5A3'],
 ]
 
 // Two frames for walking legs
 const legsFrame1 = [
   // Left leg forward, right leg back
-  [4,9,'#F5C5A3'],[4,10,'#F5C5A3'],[4,11,'#F5C5A3'],
-  [6,9,'#F5C5A3'],[7,10,'#F5C5A3'],[7,11,'#F5C5A3'],
-  // Shoes
-  [4,12,'#E8002D'],[7,12,'#E8002D'],
+  [4,9,'#F5C5A3'],[4,10,'#F5C5A3'],[3,11,'#F5C5A3'],
+  [7,9,'#F5C5A3'],[7,10,'#F5C5A3'],[8,11,'#F5C5A3'],
+  // Red heels
+  [3,12,'#E8002D'],[8,12,'#E8002D'],
 ]
 const legsFrame2 = [
   // Swap legs
-  [4,9,'#F5C5A3'],[3,10,'#F5C5A3'],[3,11,'#F5C5A3'],
+  [5,9,'#F5C5A3'],[5,10,'#F5C5A3'],[5,11,'#F5C5A3'],
   [6,9,'#F5C5A3'],[6,10,'#F5C5A3'],[6,11,'#F5C5A3'],
-  // Shoes
-  [3,12,'#E8002D'],[6,12,'#E8002D'],
+  // Red heels closer together
+  [5,12,'#E8002D'],[6,12,'#E8002D'],
 ]
 
 function pixelsToShadow(pixels) {
@@ -72,7 +74,7 @@ const shadowLegs2 = pixelsToShadow(legsFrame2)
 
 function PixelGirl({ walking }) {
   return (
-    <div className="relative" style={{ width: 16 * PX, height: 13 * PX }}>
+    <div className="relative" style={{ width: 17 * PX, height: 13 * PX }}>
       {/* Body + flag (static) */}
       <div
         style={{
@@ -127,10 +129,18 @@ export default function PixelLoadingBar({ loaded, onStart }) {
       prevLoaded.current = true
       return () => clearInterval(fill)
     }
-    // Slow fake progress while loading
+    // Slow fake progress while loading — realistic stalls and bursts
     const interval = setInterval(() => {
-      setProgress(p => Math.min(p + Math.random() * 8, 88))
-    }, 300)
+      setProgress(p => {
+        if (p >= 88) return 88
+        // Simulate realistic loading: occasional stalls, varying speeds
+        const zone = p < 20 ? 3 : p < 50 ? 2 : p < 75 ? 1.5 : 0.5
+        const jitter = Math.random() * zone
+        // 20% chance of a "stall" where nothing moves
+        if (Math.random() < 0.2) return p
+        return Math.min(p + jitter, 88)
+      })
+    }, 400)
     return () => clearInterval(interval)
   }, [loaded])
 
