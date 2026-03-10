@@ -1,7 +1,9 @@
-BINARY  = termf1
+BINARY        = termf1
+SERVER_BINARY = termf1-server
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS  = -ldflags "-s -w -X main.version=$(VERSION)"
 BUILD    = go build $(LDFLAGS) -o $(BINARY) .
+BUILD_SERVER = go build $(LDFLAGS) -o $(SERVER_BINARY) ./cmd/termf1-server
 RUN      = ./$(BINARY)
 
 DIST_DIR = dist
@@ -12,17 +14,25 @@ PLATFORMS = \
 	linux/arm64 \
 	windows/amd64
 
-.PHONY: all build run install clean tidy dist snapshot
+.PHONY: all build server run run-server install clean tidy dist snapshot
 
 all: build
 
-## build: compile the binary
+## build: compile the TUI binary
 build:
 	$(BUILD)
 
-## run: build and launch the dashboard
+## server: compile the live-timing server binary
+server:
+	$(BUILD_SERVER)
+
+## run: build and launch the TUI dashboard
 run: build
 	$(RUN)
+
+## run-server: build and launch the live-timing server
+run-server: server
+	./$(SERVER_BINARY)
 
 ## install: install to $GOPATH/bin so you can run `termf1` anywhere
 install:
@@ -56,9 +66,9 @@ snapshot:
 	$(BUILD)
 	@echo "Built $(BINARY) $(VERSION)"
 
-## clean: remove the compiled binary and dist/
+## clean: remove compiled binaries and dist/
 clean:
-	rm -f $(BINARY)
+	rm -f $(BINARY) $(SERVER_BINARY)
 	rm -rf $(DIST_DIR)
 
 ## vet: run go vet

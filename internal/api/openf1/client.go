@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -101,77 +100,78 @@ func (c *Client) GetRaceControl(ctx context.Context, sessionKey int) ([]RaceCont
 	return out, c.get(ctx, "/race_control", skParam(sessionKey), &out)
 }
 
-// DashboardPayload aggregates all data needed to render the live timing screen.
-type DashboardPayload struct {
-	Session      Session
-	Drivers      []Driver
-	Laps         []Lap
-	Intervals    []Interval
-	Positions    []Position
-	Stints       []Stint
-	Pits         []Pit
-	RaceControls []RaceControl
-	Weathers     []Weather
+func (c *Client) GetSessionResults(ctx context.Context, sessionKey int) ([]SessionResult, error) {
+	var out []SessionResult
+	return out, c.get(ctx, "/session_result", skParam(sessionKey), &out)
 }
 
-// FetchDashboard fetches all dashboard data concurrently.
+// DashboardPayload aggregates all data needed to render the live timing screen.
+type DashboardPayload struct {
+	Session        Session
+	Drivers        []Driver
+	Laps           []Lap
+	Intervals      []Interval
+	SessionResults []SessionResult
+	Stints         []Stint
+	Pits           []Pit
+	RaceControls   []RaceControl
+	Weathers       []Weather
+}
+
+// FetchDashboard fetches all dashboard data sequentially with a small delay
+// between requests to stay within OpenF1's rate limit (~3 req/s).
 func (c *Client) FetchDashboard(ctx context.Context) (*DashboardPayload, error) {
 	session, err := c.GetLatestSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("session: %w", err)
 	}
 	sk := session.SessionKey
-
-	type result struct {
-		key string
-		val interface{}
-		err error
-	}
-	ch := make(chan result, 8)
-	var wg sync.WaitGroup
-
-	fetch := func(key string, fn func() (interface{}, error)) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			v, e := fn()
-			ch <- result{key, v, e}
-		}()
-	}
-
-	fetch("drivers", func() (interface{}, error) { return c.GetDrivers(ctx, sk) })
-	fetch("laps", func() (interface{}, error) { return c.GetLaps(ctx, sk) })
-	fetch("intervals", func() (interface{}, error) { return c.GetIntervals(ctx, sk) })
-	fetch("positions", func() (interface{}, error) { return c.GetPositions(ctx, sk) })
-	fetch("stints", func() (interface{}, error) { return c.GetStints(ctx, sk) })
-	fetch("pits", func() (interface{}, error) { return c.GetPits(ctx, sk) })
-	fetch("race_control", func() (interface{}, error) { return c.GetRaceControl(ctx, sk) })
-	fetch("weather", func() (interface{}, error) { return c.GetWeather(ctx, sk) })
-
-	go func() { wg.Wait(); close(ch) }()
-
 	p := &DashboardPayload{Session: session}
-	for r := range ch {
-		if r.err != nil {
-			continue // partial data is fine; skip failed endpoint
+
+	// 350 ms between each call → ~2.8 req/s, safely under the 3/s limit.
+	// Each call checks ctx so the whole thing can be cancelled.
+	type call struct {
+		name string
+		fn   func() error
+	}
+	calls := []call{
+		{"drivers", func() error {
+			v, e := c.GetDrivers(ctx, sk); p.Drivers = v; return e
+		}},
+		{"results", func() error {
+			v, e := c.GetSessionResults(ctx, sk); p.SessionResults = v; return e
+		}},
+		{"stints", func() error {
+			v, e := c.GetStints(ctx, sk); p.Stints = v; return e
+		}},
+		{"pits", func() error {
+			v, e := c.GetPits(ctx, sk); p.Pits = v; return e
+		}},
+		{"laps", func() error {
+			v, e := c.GetLaps(ctx, sk); p.Laps = v; return e
+		}},
+		{"intervals", func() error {
+			v, e := c.GetIntervals(ctx, sk); p.Intervals = v; return e
+		}},
+		{"weather", func() error {
+			v, e := c.GetWeather(ctx, sk); p.Weathers = v; return e
+		}},
+		{"race_control", func() error {
+			v, e := c.GetRaceControl(ctx, sk); p.RaceControls = v; return e
+		}},
+	}
+
+	for i, c := range calls {
+		if err := ctx.Err(); err != nil {
+			break // context cancelled
 		}
-		switch r.key {
-		case "drivers":
-			p.Drivers = r.val.([]Driver)
-		case "laps":
-			p.Laps = r.val.([]Lap)
-		case "intervals":
-			p.Intervals = r.val.([]Interval)
-		case "positions":
-			p.Positions = r.val.([]Position)
-		case "stints":
-			p.Stints = r.val.([]Stint)
-		case "pits":
-			p.Pits = r.val.([]Pit)
-		case "race_control":
-			p.RaceControls = r.val.([]RaceControl)
-		case "weather":
-			p.Weathers = r.val.([]Weather)
+		_ = c.fn() // partial data on error is fine
+		if i < len(calls)-1 {
+			select {
+			case <-ctx.Done():
+				return p, nil
+			case <-time.After(350 * time.Millisecond):
+			}
 		}
 	}
 	return p, nil

@@ -1,4 +1,4 @@
-package views
+package standings
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbletea"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/jolpica"
 	"github.com/devkeshwani/termf1/internal/ui/styles"
@@ -68,10 +69,10 @@ func (s *Standings) UpdateStandings(msg tea.Msg) (*Standings, tea.Cmd) {
 
 func (s *Standings) View() string {
 	if s.loading && len(s.drivers) == 0 {
-		return centred(s.width, s.height, s.spin.View()+" Loading standings…")
+		return common.Centred(s.width, s.height, s.spin.View()+" Loading standings…")
 	}
 	if s.err != nil && len(s.drivers) == 0 {
-		return centred(s.width, s.height, styles.ErrorStyle.Render("⚠  "+s.err.Error()))
+		return common.Centred(s.width, s.height, styles.ErrorStyle.Render("⚠  "+s.err.Error()))
 	}
 
 	half := s.width / 2
@@ -130,7 +131,7 @@ func (s *Standings) driverStandingsTable(w int) string {
 		bar := styles.BarChart(pts, maxPts, barW, teamCol)
 		ptsStr := fmt.Sprintf("%4.0f", pts)
 
-		posC := lipgloss.NewStyle().Width(3).Foreground(posColor(pos)).Bold(pos <= 3).Render(posStr)
+		posC := lipgloss.NewStyle().Width(3).Foreground(common.PosColor(pos)).Bold(pos <= 3).Render(posStr)
 		codeC := lipgloss.NewStyle().Width(5).Bold(true).Foreground(styles.ColorText).Render(code)
 		ptsC := lipgloss.NewStyle().Width(5).Align(lipgloss.Right).Foreground(styles.ColorYellow).Render(ptsStr)
 
@@ -172,7 +173,7 @@ func (s *Standings) constructorStandingsTable(w int) string {
 		bar := styles.BarChart(pts, maxPts, barW, teamCol)
 		ptsStr := fmt.Sprintf("%4.0f", pts)
 
-		posC := lipgloss.NewStyle().Width(3).Foreground(posColor(pos)).Bold(pos <= 3).Render(fmt.Sprintf("%2d", pos))
+		posC := lipgloss.NewStyle().Width(3).Foreground(common.PosColor(pos)).Bold(pos <= 3).Render(fmt.Sprintf("%2d", pos))
 		nameC := lipgloss.NewStyle().Width(14).Bold(true).Foreground(styles.ColorText).Render(name)
 		ptsC := lipgloss.NewStyle().Width(5).Align(lipgloss.Right).Foreground(styles.ColorYellow).Render(ptsStr)
 
@@ -186,7 +187,7 @@ func (s *Standings) constructorStandingsTable(w int) string {
 
 func fetchStandingsCmd(client *jolpica.Client) tea.Cmd {
 	return func() tea.Msg {
-		ctx := contextBG()
+		ctx := common.ContextBG()
 		drivers, err := client.GetDriverStandings(ctx)
 		if err != nil {
 			return standingsErrMsg{err}

@@ -1,4 +1,4 @@
-package views
+package trackmap
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbletea"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/multiviewer"
 	"github.com/devkeshwani/termf1/internal/api/openf1"
@@ -27,88 +28,6 @@ type trackMapTickMsg time.Time
 type trackMapCircuitMsg struct{ circuit *multiviewer.Circuit }
 type trackMapCircuitErrMsg struct{ err error }
 
-// ── ASCII circuit definitions ─────────────────────────────────────────────────
-
-// circuitArt maps circuit short names (from OpenF1) to ASCII art.
-// Each entry is a list of strings (lines). Drivers are overlaid as coloured dots.
-var circuitArt = map[string][]string{
-	"Melbourne": {
-		"                                              ",
-		"           ╭──────╮                           ",
-		"          ╭╯      │  ╭────╮                  ",
-		"         ╭╯       ╰──╯    │                  ",
-		"        ╭╯               ╭╯                  ",
-		"       ╭╯              ╭─╯                   ",
-		"      ╭╯           ╭───╯                     ",
-		"     ╭╯         ╭──╯                         ",
-		"     │        ╭─╯                            ",
-		"     │       ╭╯                              ",
-		"     │      ╭╯   ╭╮                          ",
-		"     │     ╭╯  ╭─╯╰──╮                       ",
-		"     ╰─────╯  │      ╰─────────╮             ",
-		"              ╰╮               │             ",
-		"               ╰───────────────╯             ",
-		"                                              ",
-	},
-	"Monza": {
-		"                                              ",
-		"        ╭────────────────────╮               ",
-		"        │ ╭──────────────╮   │               ",
-		"        │ │              │   │               ",
-		"        │ │  ╭────────╮  │   │               ",
-		"        │ │  │        │  │   │               ",
-		"        │ ╰──╯        ╰──╯   │               ",
-		"        │                    │               ",
-		"        ╰────────────────────╯               ",
-		"                                              ",
-	},
-	"Silverstone": {
-		"                                              ",
-		"    ╭──────────────────╮                     ",
-		"   ╭╯                  ╰╮                    ",
-		"  ╭╯    ╭──────╮        ╰╮                   ",
-		"  │    ╭╯      ╰╮        │                   ",
-		"  │   ╭╯         ╰╮      │                   ",
-		"  │   │            ╰─────╯                   ",
-		"  ╰───╯                                      ",
-		"                                              ",
-	},
-	"Monaco": {
-		"                                              ",
-		"  ╭──────────────────────╮                   ",
-		"  │  ╭─────────────────╮ │                   ",
-		"  │  │ ╭─╮   ╭──╮      │ │                   ",
-		"  │  │ │ ╰───╯  ╰────╮ │ │                   ",
-		"  │  │ │             │ │ │                   ",
-		"  │  ╰─╯             ╰─╯ │                   ",
-		"  ╰────────────────────╯                     ",
-		"                                              ",
-	},
-	"Spa": {
-		"                                              ",
-		"      ╭─────────────────────────╮            ",
-		"     ╭╯                         │            ",
-		"    ╭╯   ╭──────────────╮       │            ",
-		"   ╭╯    │              ╰──╮    │            ",
-		"  ╭╯     │                 ╰────╯            ",
-		"  │      │                                   ",
-		"  ╰──────╯                                   ",
-		"                                              ",
-	},
-	// Generic fallback
-	"default": {
-		"                                             ",
-		"         ╭───────────────────────╮          ",
-		"        ╭╯                       ╰╮         ",
-		"       ╭╯     ╭───────────╮       ╰╮        ",
-		"      ╭╯      │           │        ╰╮       ",
-		"     ╭╯       │           │         │       ",
-		"     │        ╰─────╮     │         │       ",
-		"     │          ╭───╯     │         │       ",
-		"     ╰──────────╯         ╰─────────╯       ",
-		"                                             ",
-	},
-}
 
 // simDrivers provides a fake Australian GP leaderboard for simulation/demo.
 var simDrivers = []struct {
@@ -241,7 +160,7 @@ func (t *TrackMap) UpdateTrackMap(msg tea.Msg) (*TrackMap, tea.Cmd) {
 
 func (t *TrackMap) View() string {
 	if t.loading {
-		return centred(t.width, t.height, t.spin.View()+" Loading track data…")
+		return common.Centred(t.width, t.height, t.spin.View()+" Loading track data…")
 	}
 
 	circuitName := t.session.CircuitShortName
@@ -296,7 +215,7 @@ func (t *TrackMap) View() string {
 		circuitStr := renderDynamicCircuit(t.circuit, leftW-6, mapH-4)
 		mapInner = cTitle + "\n" + circuitStr
 	} else {
-		art := getCircuitArt(circuitName)
+		art := common.GetCircuitArt(circuitName)
 		cTitle := lipgloss.NewStyle().Bold(true).Foreground(styles.ColorSubtle).Render(" Circuit Layout")
 		var artLines []string
 		for _, line := range art {
@@ -387,12 +306,6 @@ func buildSimDots(frame int) []driverDot {
 	return rows
 }
 
-func getCircuitArt(name string) []string {
-	if art, ok := circuitArt[name]; ok {
-		return art
-	}
-	return circuitArt["default"]
-}
 
 func (t *TrackMap) renderLegend(rows []driverDot) string {
 	title := lipgloss.NewStyle().Bold(true).Foreground(styles.ColorSubtle).Render("Current Order")
@@ -418,11 +331,11 @@ func (t *TrackMap) renderLegend(rows []driverDot) string {
 			Bold(true).
 			Render(" " + row.acronym + " ")
 
-		posStr := lipgloss.NewStyle().Width(3).Foreground(posColor(row.pos)).Bold(row.pos <= 3).
+		posStr := lipgloss.NewStyle().Width(3).Foreground(common.PosColor(row.pos)).Bold(row.pos <= 3).
 			Render(fmt.Sprintf("%2d", row.pos))
 
-		lastStr := formatDuration(row.lapTime)
-		bestStr := formatDuration(row.bestLap)
+		lastStr := common.FormatDuration(row.lapTime)
+		bestStr := common.FormatDuration(row.bestLap)
 
 		// Colour last lap purple if it equals best lap
 		lastCol := styles.ColorText
@@ -612,7 +525,7 @@ func renderDynamicCircuit(c *multiviewer.Circuit, cols, rows int) string {
 
 func fetchTrackMapCmd(client *openf1.Client) tea.Cmd {
 	return func() tea.Msg {
-		ctx := contextBG()
+		ctx := common.ContextBG()
 		session, err := client.GetLatestSession(ctx)
 		if err != nil {
 			return trackMapErrMsg{err}
@@ -631,7 +544,7 @@ func fetchCircuitByKeyCmd(mv *multiviewer.Client, circuitKey, year int) tea.Cmd 
 		if circuitKey <= 0 {
 			return trackMapCircuitErrMsg{fmt.Errorf("invalid circuit key %d", circuitKey)}
 		}
-		ctx := contextBG()
+		ctx := common.ContextBG()
 		c, err := mv.GetCircuit(ctx, circuitKey, year)
 		if err != nil {
 			// Try previous year — layouts rarely change

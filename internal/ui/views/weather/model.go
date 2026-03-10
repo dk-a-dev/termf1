@@ -1,4 +1,4 @@
-package views
+package weather
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbletea"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/openf1"
 	"github.com/devkeshwani/termf1/internal/ui/styles"
@@ -67,13 +68,13 @@ func (w *WeatherView) UpdateWeather(msg tea.Msg) (*WeatherView, tea.Cmd) {
 
 func (w *WeatherView) View() string {
 	if w.loading && len(w.weathers) == 0 {
-		return centred(w.width, w.height, w.spin.View()+" Loading weather…")
+		return common.Centred(w.width, w.height, w.spin.View()+" Loading weather…")
 	}
 	if w.err != nil && len(w.weathers) == 0 {
-		return centred(w.width, w.height, styles.ErrorStyle.Render("⚠  "+w.err.Error()))
+		return common.Centred(w.width, w.height, styles.ErrorStyle.Render("⚠  "+w.err.Error()))
 	}
 	if len(w.weathers) == 0 {
-		return centred(w.width, w.height, styles.DimStyle.Render("No weather data available."))
+		return common.Centred(w.width, w.height, styles.DimStyle.Render("No weather data available."))
 	}
 
 	latest := w.weathers[len(w.weathers)-1]
@@ -190,7 +191,7 @@ func rainfallLabel(r int) string {
 
 func fetchWeatherCmd(client *openf1.Client) tea.Cmd {
 	return func() tea.Msg {
-		ctx := contextBG()
+		ctx := common.ContextBG()
 		session, err := client.GetLatestSession(ctx)
 		if err != nil {
 			return weatherErrMsg{err}

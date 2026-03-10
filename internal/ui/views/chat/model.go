@@ -1,4 +1,4 @@
-package views
+package chat
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/groq"
 	"github.com/devkeshwani/termf1/internal/ui/styles"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 )
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -295,7 +296,7 @@ func (c *Chat) sendToGroq(userMsg string) tea.Cmd {
 	}
 
 	return func() tea.Msg {
-		resp, err := c.client.Chat(contextBG(), msgs)
+		resp, err := c.client.Chat(common.ContextBG(), msgs)
 		if err != nil {
 			return chatErrMsg{err}
 		}

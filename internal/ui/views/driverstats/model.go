@@ -1,4 +1,4 @@
-package views
+package driverstats
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/bubbletea"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/jolpica"
 	"github.com/devkeshwani/termf1/internal/api/openf1"
@@ -145,10 +146,10 @@ func (d *DriverStats) UpdateDriverStats(msg tea.Msg) (*DriverStats, tea.Cmd) {
 
 func (d *DriverStats) View() string {
 	if d.loading && len(d.profiles) == 0 {
-		return centred(d.width, d.height, d.spin.View()+" Loading driver stats…")
+		return common.Centred(d.width, d.height, d.spin.View()+" Loading driver stats…")
 	}
 	if d.err != nil && len(d.profiles) == 0 {
-		return centred(d.width, d.height, styles.ErrorStyle.Render("⚠  "+d.err.Error()))
+		return common.Centred(d.width, d.height, styles.ErrorStyle.Render("⚠  "+d.err.Error()))
 	}
 
 	title := styles.Title.Render(" 📊 Driver Statistics")
@@ -281,8 +282,8 @@ func (d *DriverStats) renderOverview(p driverProfile) string {
 	row1 := lipgloss.JoinHorizontal(lipgloss.Top, statCards...)
 
 	lapCards := []string{
-		d.statCard("Best Lap", formatDuration(p.bestLap), styles.ColorPurple, cardW),
-		d.statCard("Avg Lap", formatDuration(p.avgLap), styles.ColorText, cardW),
+		d.statCard("Best Lap", common.FormatDuration(p.bestLap), styles.ColorPurple, cardW),
+		d.statCard("Avg Lap", common.FormatDuration(p.avgLap), styles.ColorText, cardW),
 		d.statCard("Lap Count", fmt.Sprintf("%d", p.lapCount), styles.ColorTeal, cardW),
 	}
 	row2 := lipgloss.JoinHorizontal(lipgloss.Top, lapCards...)
@@ -356,7 +357,7 @@ func (d *DriverStats) lapSparkline(p driverProfile, w int) string {
 	}
 
 	legend := styles.DimStyle.Render(fmt.Sprintf("  Best:%s  Avg:%s  Worst:%s  (%d laps)",
-		formatDuration(p.bestLap), formatDuration(p.avgLap), formatDuration(p.worstLap), p.lapCount))
+		common.FormatDuration(p.bestLap), common.FormatDuration(p.avgLap), common.FormatDuration(p.worstLap), p.lapCount))
 
 	return "  " + spark.String() + "\n" + legend
 }
@@ -419,7 +420,7 @@ func (d *DriverStats) renderLapAnalysis(p driverProfile) string {
 		lapNumStr := lipgloss.NewStyle().Width(4).Foreground(styles.ColorSubtle).
 			Render(fmt.Sprintf("%3d", lapNum))
 		timeStr := lipgloss.NewStyle().Width(9).Foreground(lapTimeColor(lt, p.bestLap, p.avgLap)).
-			Render(formatDuration(lt))
+			Render(common.FormatDuration(lt))
 		deltaColored := lipgloss.NewStyle().Width(8).Foreground(barColor(lt, p.bestLap, p.avgLap)).
 			Render(deltaStr)
 
@@ -440,9 +441,9 @@ func (d *DriverStats) renderSectors(p driverProfile) string {
 		cardW = 18
 	}
 
-	s1Card := d.statCard("Avg Sector 1", formatSector(p.avgS1), styles.ColorGreen, cardW)
-	s2Card := d.statCard("Avg Sector 2", formatSector(p.avgS2), styles.ColorTeal, cardW)
-	s3Card := d.statCard("Avg Sector 3", formatSector(p.avgS3), styles.ColorYellow, cardW)
+	s1Card := d.statCard("Avg Sector 1", common.FormatSector(p.avgS1), styles.ColorGreen, cardW)
+	s2Card := d.statCard("Avg Sector 2", common.FormatSector(p.avgS2), styles.ColorTeal, cardW)
+	s3Card := d.statCard("Avg Sector 3", common.FormatSector(p.avgS3), styles.ColorYellow, cardW)
 	row := lipgloss.JoinHorizontal(lipgloss.Top, s1Card, s2Card, s3Card)
 	lines = append(lines, "  "+row, "")
 
@@ -747,7 +748,7 @@ func buildProfiles(msg driverStatsDataMsg) []driverProfile {
 
 func fetchDriverStatsCmd(of1 *openf1.Client, joli *jolpica.Client) tea.Cmd {
 	return func() tea.Msg {
-		ctx := contextBG()
+		ctx := common.ContextBG()
 		session, err := of1.GetLatestSession(ctx)
 		if err != nil {
 			return driverStatsErrMsg{err}

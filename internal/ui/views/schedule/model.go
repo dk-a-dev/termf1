@@ -1,4 +1,4 @@
-package views
+package schedule
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/bubbletea"
+	"github.com/devkeshwani/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/api/jolpica"
 	"github.com/devkeshwani/termf1/internal/ui/styles"
@@ -98,10 +99,10 @@ func (s *Schedule) UpdateSchedule(msg tea.Msg) (*Schedule, tea.Cmd) {
 
 func (s *Schedule) View() string {
 	if s.loading && len(s.races) == 0 {
-		return centred(s.width, s.height, s.spin.View()+" Loading schedule…")
+		return common.Centred(s.width, s.height, s.spin.View()+" Loading schedule…")
 	}
 	if s.err != nil && len(s.races) == 0 {
-		return centred(s.width, s.height, styles.ErrorStyle.Render("⚠  "+s.err.Error()))
+		return common.Centred(s.width, s.height, styles.ErrorStyle.Render("⚠  "+s.err.Error()))
 	}
 
 	year := raceYear(s.races)
@@ -350,7 +351,7 @@ func raceYear(races []jolpica.Race) string {
 
 func fetchScheduleCmd(client *jolpica.Client) tea.Cmd {
 	return func() tea.Msg {
-		races, err := client.GetSchedule(contextBG())
+		races, err := client.GetSchedule(common.ContextBG())
 		if err != nil {
 			return scheduleErrMsg{err}
 		}

@@ -7,17 +7,19 @@ import (
 
 // Config holds all runtime configuration loaded from environment variables.
 type Config struct {
-	GroqAPIKey  string
-	GroqModel   string
-	RefreshRate int // seconds between live-data refreshes
-	Version     string
+	GroqAPIKey     string
+	GroqModel      string
+	RefreshRate    int    // seconds between live-data refreshes
+	Version        string
+	LiveServerAddr string // address of termf1-server (default: http://localhost:8765)
 }
 
 func Load() *Config {
 	return &Config{
-		GroqAPIKey:  os.Getenv("GROQ_API_KEY"),
-		GroqModel:   getEnv("GROQ_MODEL", "compound-beta"),
-		RefreshRate: getEnvInt("REFRESH_RATE", 5),
+		GroqAPIKey:     os.Getenv("GROQ_API_KEY"),
+		GroqModel:      getEnv("GROQ_MODEL", "compound-beta"),
+		RefreshRate:    getEnvInt("REFRESH_RATE", 5),
+		LiveServerAddr: getEnv("LIVE_SERVER_ADDR", ""),
 	}
 }
 

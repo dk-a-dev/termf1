@@ -106,6 +106,20 @@ type Pit struct {
 	SessionKey   int      `json:"session_key"`
 }
 
+// SessionResult stores the final result for one driver in a session.
+type SessionResult struct {
+	DNF          bool        `json:"dnf"`
+	DNS          bool        `json:"dns"`
+	DSQ          bool        `json:"dsq"`
+	DriverNumber int         `json:"driver_number"`
+	Duration     interface{} `json:"duration"` // float64 (race time or best lap), or array for quali
+	GapToLeader  interface{} `json:"gap_to_leader"` // float64 or "+N LAP(S)"
+	NumberOfLaps int         `json:"number_of_laps"`
+	MeetingKey   int         `json:"meeting_key"`
+	Position     int         `json:"position"`
+	SessionKey   int         `json:"session_key"`
+}
+
 // RaceControl stores a race-control broadcast message.
 type RaceControl struct {
 	Category     string      `json:"category"`
