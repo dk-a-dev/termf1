@@ -100,10 +100,12 @@ type Stint struct {
 type Pit struct {
 	Date         string   `json:"date"`
 	DriverNumber int      `json:"driver_number"`
+	LaneDuration float64  `json:"lane_duration"`
 	LapNumber    int      `json:"lap_number"`
 	MeetingKey   int      `json:"meeting_key"`
 	PitDuration  *float64 `json:"pit_duration"`
 	SessionKey   int      `json:"session_key"`
+	StopDuration float64  `json:"stop_duration"`
 }
 
 // SessionResult stores the final result for one driver in a session.

@@ -31,6 +31,9 @@ func FetchCmd(of1 *openf1.Client) tea.Cmd {
 		time.Sleep(350 * time.Millisecond)
 
 		positions, _ := of1.GetPositions(ctx, sess.SessionKey)
+		time.Sleep(350 * time.Millisecond)
+
+		pits, _ := of1.GetPits(ctx, sess.SessionKey)
 
 		return DataMsg{
 			Session:   sess,
@@ -38,6 +41,7 @@ func FetchCmd(of1 *openf1.Client) tea.Cmd {
 			Laps:      laps,
 			Stints:    stints,
 			Positions: positions,
+			Pits:      pits,
 		}
 	}
 }

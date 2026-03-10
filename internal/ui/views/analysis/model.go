@@ -18,25 +18,27 @@ import (
 
 const (
 	ChartStrategy = iota
-	ChartLapLine   // 2-D lap-time line chart (driver comparison)
+	// ChartLapLine   // 2-D lap-time line chart (driver comparison)
 	ChartLapSpark  // per-driver sparklines
 	ChartPace
 	ChartSectors
 	ChartSpeed
 	ChartPositions // position changes per lap
 	ChartTeamPace  // team pace comparison box plot
+	ChartPitStops  // pit stop duration bar chart
 	NumCharts
 )
 
 var chartNames = []string{
 	"① Strategy",
-	"② Lap Lines",
+	// "② Lap Lines",
 	"③ Sparklines",
 	"④ Pace",
 	"⑤ Sectors",
 	"⑥ Speed",
 	"⑦ Positions",
 	"⑧ Team Pace",
+	"⑨ Pit Stops",
 }
 
 // ── Messages ──────────────────────────────────────────────────────────────────
@@ -48,6 +50,7 @@ type DataMsg struct {
 	Laps      []openf1.Lap
 	Stints    []openf1.Stint
 	Positions []openf1.Position
+	Pits      []openf1.Pit
 }
 
 // ErrMsg carries a fetch error.
@@ -70,6 +73,7 @@ type Analysis struct {
 	laps      []openf1.Lap
 	stints    []openf1.Stint
 	positions []openf1.Position
+	pits      []openf1.Pit
 
 	viewport viewport.Model
 	spin     spinner.Model
@@ -123,6 +127,7 @@ func (a *Analysis) UpdateAnalysis(msg tea.Msg) (*Analysis, tea.Cmd) {
 		a.laps = msg.Laps
 		a.stints = msg.Stints
 		a.positions = msg.Positions
+		a.pits = msg.Pits
 		a.reloadViewport()
 		return a, nil
 

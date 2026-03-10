@@ -20,8 +20,6 @@ func (a *Analysis) renderChart(w, h int) string {
 	switch a.chart {
 	case ChartStrategy:
 		return a.renderStrategy(w, h)
-	case ChartLapLine:
-		return a.renderLapLineChart(w, h)
 	case ChartLapSpark:
 		return a.renderLapSparklines(w, h)
 	case ChartPace:
@@ -34,6 +32,8 @@ func (a *Analysis) renderChart(w, h int) string {
 		return a.renderPositionChart(w, h)
 	case ChartTeamPace:
 		return a.renderTeamPaceChart(w, h)
+	case ChartPitStops:
+		return a.renderPitStopChart(w, h)
 	}
 	return ""
 }
