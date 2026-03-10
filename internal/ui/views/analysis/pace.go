@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
-
+	"strings"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/devkeshwani/termf1/internal/ui/styles"
 	"github.com/devkeshwani/termf1/internal/ui/views/common"
@@ -172,3 +172,4 @@ func joinLines(lines []string) string {
 		b.WriteString(l)
 	}
 	return b.String()
+}
