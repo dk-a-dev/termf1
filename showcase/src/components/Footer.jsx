@@ -4,54 +4,315 @@ import F1Car from './F1Car'
 
 const RADIO_CARDS = [
   {
-    id: 'leclerc-water',
-    number: '16',
+    id: 'raikkonen-leave-me-alone',
+    number: '7',
+    team: 'LOTUS F1 TEAM',
+    driver: 'Kimi Räikkönen',
+    shortLabel: 'RAIKKONEN RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'KIMI YOU NEED TO PUSH NOW.' },
+      { role: 'DRIVER', text: 'LEAVE ME ALONE, I KNOW WHAT I AM DOING.' },
+    ],
+    colour: '#FFD800',
+  },
+  {
+    id: 'raikkonen-drink',
+    number: '7',
+    team: 'LOTUS F1 TEAM',
+    driver: 'Kimi Räikkönen',
+    shortLabel: 'RAIKKONEN RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'GIVE ME THE DRINK.' },
+      { role: 'ENGINEER', text: 'NO KIMI, YOU WILL NOT HAVE THE DRINK.' },
+    ],
+    colour: '#FFD800',
+  },
+  {
+    id: 'raikkonen-steering-wheel',
+    number: '7',
+    team: 'FERRARI',
+    driver: 'Kimi Räikkönen',
+    shortLabel: 'RAIKKONEN RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'STEERING WHEEL.' },
+      { role: 'DRIVER', text: 'GLOVES AND STEERING WHEEL.' },
+      { role: 'DRIVER', text: 'HEY! STEERING WHEEL SOMEBODY TELL HIM TO GIVE IT TO ME.' },
+    ],
+    colour: '#DC0000',
+  },
+  {
+    id: 'raikkonen-for-what',
+    number: '7',
+    team: 'LOTUS F1 TEAM',
+    driver: 'Kimi Räikkönen',
+    shortLabel: 'RAIKKONEN RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'KIMI YOU WILL HAVE A PENALTY.' },
+      { role: 'DRIVER', text: 'FOR WHAT?' },
+    ],
+    colour: '#FFD800',
+  },
+  {
+    id: 'alonso-gp2',
+    number: '14',
+    team: 'MCLAREN HONDA',
+    driver: 'Fernando Alonso',
+    shortLabel: 'ALONSO RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'GP2 ENGINE! GP2!' },
+      { role: 'DRIVER', text: 'AARGH!' },
+    ],
+    colour: '#FF8700',
+  },
+  {
+    id: 'alonso-engine-slow',
+    number: '14',
+    team: 'MCLAREN HONDA',
+    driver: 'Fernando Alonso',
+    shortLabel: 'ALONSO RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'THE ENGINE FEELS GOOD.' },
+      { role: 'DRIVER', text: 'MUCH SLOWER THAN BEFORE.' },
+      { role: 'DRIVER', text: 'AMAZING.' },
+    ],
+    colour: '#FF8700',
+  },
+  {
+    id: 'alonso-bye-bye',
+    number: '14',
+    team: 'ALPINE F1 TEAM',
+    driver: 'Fernando Alonso',
+    shortLabel: 'ALONSO RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'YES! BYE BYE!' },
+    ],
+    colour: '#0090FF',
+  },
+  {
+    id: 'massa-faster-than-you',
+    number: '7',
     team: 'SCUDERIA FERRARI',
+    driver: 'Felipe Massa',
+    shortLabel: 'MASSA RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'FERNANDO IS FASTER THAN YOU.' },
+      { role: 'ENGINEER', text: 'PLEASE CONFIRM YOU UNDERSTAND THIS MESSAGE.' },
+    ],
+    colour: '#DC0000',
+  },
+  {
+    id: 'vettel-space',
+    number: '5',
+    team: 'FERRARI',
+    driver: 'Sebastian Vettel',
+    shortLabel: 'VETTEL RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'ALL THE TIME YOU HAVE TO LEAVE A SPACE!' },
+    ],
+    colour: '#DC0000',
+  },
+  {
+    id: 'vettel-loose',
+    number: '5',
+    team: 'RED BULL RACING',
+    driver: 'Sebastian Vettel',
+    shortLabel: 'VETTEL RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'THERE IS SOMETHING LOOSE BETWEEN MY LEGS.' },
+      { role: 'DRIVER', text: 'APART FROM THE OBVIOUS.' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'vettel-karma',
+    number: '5',
+    team: 'FERRARI',
+    driver: 'Sebastian Vettel',
+    shortLabel: 'VETTEL RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'PALMER HAS RETIRED.' },
+      { role: 'DRIVER', text: 'KARMA.' },
+    ],
+    colour: '#DC0000',
+  },
+  {
+    id: 'vettel-world-champion',
+    number: '1',
+    team: 'RED BULL RACING',
+    driver: 'Sebastian Vettel',
+    shortLabel: 'VETTEL RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'SEBASTIAN VETTEL YOU ARE THE WORLD CHAMPION.' },
+      { role: 'DRIVER', text: 'YES! YES! YES!' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'vettel-love-team',
+    number: '5',
+    team: 'RED BULL RACING',
+    driver: 'Sebastian Vettel',
+    shortLabel: 'VETTEL RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'WE HAVE TO REMEMBER THESE DAYS.' },
+      { role: 'DRIVER', text: 'THERE IS NO GUARANTEE THEY WILL LAST FOREVER.' },
+      { role: 'DRIVER', text: 'I LOVE YOU GUYS.' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'leclerc-im-stupid',
+    number: '16',
+    team: 'FERRARI',
     driver: 'Charles Leclerc',
     shortLabel: 'LECLERC RADIO',
     dialogue: [
-      { role: 'DRIVER', text: 'IS THERE A LEAKAGE?' },
-      { role: 'ENGINEER', text: 'A LEAKAGE OF WHAT?' },
-      { role: 'DRIVER', text: 'I HAVE THE SEAT FULL OF WATER! LIKE, FULL OF WATER!' },
-      { role: 'DRIVER', text: 'MUST BE THE WATER' },
-      { role: 'ENGINEER', text: 'LET\'S ADD THAT TO THE WORDS OF WISDOM.' },
+      { role: 'DRIVER', text: 'NOOOOOOO!' },
+      { role: 'DRIVER', text: 'I AM STUPID.' },
     ],
     colour: '#DC0000',
   },
   {
-    id: 'sainz-tyres',
-    number: '55',
-    team: 'SCUDERIA FERRARI',
-    driver: 'Carlos Sainz',
-    shortLabel: 'SAINZ RADIO',
+    id: 'leclerc-cat',
+    number: '16',
+    team: 'FERRARI',
+    driver: 'Charles Leclerc',
+    shortLabel: 'LECLERC RADIO',
     dialogue: [
-      { role: 'DRIVER', text: 'TYRES ARE TOTALLY DEAD.' },
-      { role: 'ENGINEER', text: 'YOU JUST SET PURPLE SECTOR 2.' },
-      { role: 'DRIVER', text: 'I\'M TELLING YOU, I NEED TO PIT.' },
-      { role: 'ENGINEER', text: 'THEN WHY ARE YOU FASTER THAN EVERYONE ELSE?' },
+      { role: 'DRIVER', text: 'THAT IS A CUT.' },
+      { role: 'ENGINEER', text: 'WHAT?' },
+      { role: 'DRIVER', text: 'A CAT... I MEANT A CAT.' },
     ],
     colour: '#DC0000',
   },
   {
-    id: 'hamilton-back',
+    id: 'hamilton-tyres-gone',
     number: '44',
-    team: 'MERCEDES-AMG PETRONAS',
+    team: 'MERCEDES AMG PETRONAS',
     driver: 'Lewis Hamilton',
     shortLabel: 'HAMILTON RADIO',
     dialogue: [
-      { role: 'DRIVER', text: 'ARHH MY BACK IS KILLING ME, GUYS.' },
-      { role: 'ENGINEER', text: 'YEAH COPY LEWIS, LET\'S BRING IT HOME.' },
+      { role: 'DRIVER', text: 'BONO MY TYRES ARE GONE.' },
     ],
     colour: '#00A19B',
   },
   {
-    id: 'verstappen-boring',
+    id: 'hamilton-great-driver',
+    number: '44',
+    team: 'MERCEDES AMG PETRONAS',
+    driver: 'Lewis Hamilton',
+    shortLabel: 'HAMILTON RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'SUCH A GREAT DRIVER LANDO.' },
+    ],
+    colour: '#00A19B',
+  },
+  {
+    id: 'hamilton-dangerous-driving',
+    number: '44',
+    team: 'MERCEDES AMG PETRONAS',
+    driver: 'Lewis Hamilton',
+    shortLabel: 'HAMILTON RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'THAT IS SOME DANGEROUS DRIVING MAN.' },
+    ],
+    colour: '#00A19B',
+  },
+  {
+    id: 'verstappen-fastest-lap',
     number: '1',
-    team: 'ORACLE RED BULL RACING',
+    team: 'RED BULL RACING',
     driver: 'Max Verstappen',
     shortLabel: 'VERSTAPPEN RADIO',
     dialogue: [
-      { role: 'DRIVER', text: 'THIS IS SO BORING, SHOULD HAVE BROUGHT MY PILLOW.' },
+      { role: 'DRIVER', text: 'WHAT IS THE FASTEST LAP?' },
+      { role: 'ENGINEER', text: 'WE ARE NOT CONCERNED ABOUT THAT.' },
+      { role: 'DRIVER', text: 'YEAH BUT I AM.' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'verstappen-simply-lovely',
+    number: '1',
+    team: 'RED BULL RACING',
+    driver: 'Max Verstappen',
+    shortLabel: 'VERSTAPPEN RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'SIMPLY LOVELY.' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'verstappen-lizard',
+    number: '33',
+    team: 'RED BULL RACING',
+    driver: 'Max Verstappen',
+    shortLabel: 'VERSTAPPEN RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'THERE IS A GIANT LIZARD ON THE TRACK.' },
+    ],
+    colour: '#1E5BC6',
+  },
+  {
+    id: 'gasly-monza-win',
+    number: '10',
+    team: 'ALPHATAURI',
+    driver: 'Pierre Gasly',
+    shortLabel: 'GASLY RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'WHAT DID WE JUST DO?' },
+      { role: 'ENGINEER', text: 'YOU WON THE RACE.' },
+      { role: 'DRIVER', text: 'OH MY GOD!' },
+    ],
+    colour: '#2B4562',
+  },
+  {
+    id: 'stroll-ok-button',
+    number: '18',
+    team: 'ASTON MARTIN',
+    driver: 'Lance Stroll',
+    shortLabel: 'STROLL RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'PRESS THE OK BUTTON LANCE.' },
+      { role: 'DRIVER', text: 'I PRESSED IT.' },
+      { role: 'ENGINEER', text: 'YOU ARE PRESSING PIT CONFIRM.' },
+      { role: 'DRIVER', text: 'PIT CONFIRM IS THE OK BUTTON BRAD.' },
+    ],
+    colour: '#006F62',
+  },
+  {
+    id: 'norris-talent',
+    number: '4',
+    team: 'MCLAREN',
+    driver: 'Lando Norris',
+    shortLabel: 'NORRIS RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'LANDO WHAT DAMAGE DO YOU HAVE?' },
+      { role: 'DRIVER', text: 'TALENT.' },
+    ],
+    colour: '#FF8700',
+  },
+  {
+    id: 'grosjean-ericsson',
+    number: '8',
+    team: 'HAAS F1 TEAM',
+    driver: 'Romain Grosjean',
+    shortLabel: 'GROSJEAN RADIO',
+    dialogue: [
+      { role: 'ENGINEER', text: 'WHAT HAPPENED?' },
+      { role: 'DRIVER', text: 'I THINK ERICSSON HIT US.' },
+    ],
+    colour: '#B6BABD',
+  },
+  {
+    id: 'webber-vomiting',
+    number: '2',
+    team: 'RED BULL RACING',
+    driver: 'Mark Webber',
+    shortLabel: 'WEBBER RADIO',
+    dialogue: [
+      { role: 'DRIVER', text: 'MATE I AM VOMITING.' },
+      { role: 'DRIVER', text: 'THERE IS SOME VOMITING GOING ON.' },
     ],
     colour: '#1E5BC6',
   },
@@ -266,35 +527,38 @@ export default function Footer() {
                     {/* Separator */}
                     <div className="h-px mx-4 shrink-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
 
-                    {/* Dialogue — scrollable */}
-                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                    {/* Dialogue — F1 poster style, left/right differentiation */}
+                    <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col justify-center">
                       {card.dialogue.map((line, idx) => {
-                        const isDriver = line.role === 'DRIVER'
+                        const isDriver = line.role === 'DRIVER';
                         return (
-                          <div key={idx} className={`flex flex-col ${isDriver ? 'items-start' : 'items-end'}`}>
+                          <div
+                            key={idx}
+                            className={`w-full flex flex-col mb-3 ${isDriver ? 'items-start' : 'items-end'}`}
+                          >
                             <span
-                              className="text-[9px] font-mono tracking-[0.2em] uppercase mb-1"
-                              style={{ color: isDriver ? card.colour : '#6B7280' }}
-                            >
-                              {line.role}
-                            </span>
-                            <div
-                              className={`px-3 py-2 rounded-lg max-w-[88%] ${isDriver ? 'rounded-tl-sm' : 'rounded-tr-sm'}`}
+                              className={`text-[13px] font-black tracking-[0.18em] uppercase ${isDriver ? 'text-left' : 'text-right'}`}
                               style={{
-                                backgroundColor: isDriver ? `${card.colour}18` : '#1A1C23',
-                                borderLeft: isDriver ? `2px solid ${card.colour}` : 'none',
-                                borderRight: !isDriver ? '2px solid #4B5563' : 'none',
+                                color: isDriver ? card.colour : '#fff',
+                                background: 'none',
+                                textShadow: isDriver ? `0 1px 8px ${card.colour}55` : '0 1px 8px #0008',
+                                letterSpacing: '0.12em',
+                                padding: '0.1em 0',
+                                maxWidth: '90%',
                               }}
                             >
-                              <p
-                                className="text-[11px] font-medium leading-snug"
-                                style={{ color: isDriver ? '#fff' : '#D1D5DB', textAlign: isDriver ? 'left' : 'right' }}
+                              {line.text}
+                            </span>
+                            {line.role && (
+                              <span
+                                className={`text-[10px] font-mono tracking-[0.18em] uppercase mt-1 opacity-70 ${isDriver ? 'text-left' : 'text-right'}`}
+                                style={{ color: isDriver ? card.colour : '#aaa', maxWidth: '90%' }}
                               >
-                                {line.text}
-                              </p>
-                            </div>
+                                {line.role}
+                              </span>
+                            )}
                           </div>
-                        )
+                        );
                       })}
                     </div>
 
