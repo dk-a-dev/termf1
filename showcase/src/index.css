@@ -1,0 +1,108 @@
+/* ── Custom F1 fonts ─────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Speeday';
+  src: url('/fonts/speeday/Speeday-Bold-FFP.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Alphacorsa';
+  src: url('/fonts/alphacorsa/Alphacorsa Personal Use.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Raceline';
+  src: url('/fonts/raceline/Raceline Demo.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    background: #000;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #000;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #080808; }
+  ::-webkit-scrollbar-thumb { background: #E8002D; border-radius: 3px; }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #E8002D 0%, #ff4d6d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .red-glow {
+    box-shadow: 0 0 40px rgba(232,0,45,0.25), 0 0 80px rgba(232,0,45,0.1);
+  }
+
+  .section-heading {
+    @apply text-[10px] font-mono tracking-[0.5em] text-[#E8002D] uppercase;
+  }
+}
+
+/* Scanlines overlay — subtle on sections */
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.018) 3px,
+    rgba(0,0,0,0.018) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Terminal window chrome */
+.term-chrome {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.term-titlebar {
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.term-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
