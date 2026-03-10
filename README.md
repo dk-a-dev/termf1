@@ -45,7 +45,32 @@ A dedicated deep-dive view for any completed session — navigate to any race we
 
 ## Screenshots
 
-> _Screenshots below — captured from the 2026 Australian GP data._
+### Dashboard & Core Views
+
+| | |
+|---|---|
+| ![Dashboard](screenshots/dashboard.png) | ![Standings](screenshots/standings.png) |
+| **Dashboard** — Live timing (v3 rebuild in progress) | **Standings** — Driver & Constructor standings with team bar charts |
+| ![Schedule](screenshots/schedule.png) | ![Weather](screenshots/weather.png) |
+| **Schedule** — Season calendar with session detail | **Weather** — Real-time track & air conditions with sparklines |
+| ![Driver Stats](screenshots/driver-stats.png) | ![Track Map](screenshots/trackmap-1.png) |
+| **Driver Stats** — Lap analysis, sectors, histogram | **Track Map** — Real GPS circuit outline with corner labels |
+
+### Race Analysis — 9 Charts
+
+| | |
+|---|---|
+| ![Tyre Strategy](screenshots/graph-tyre-strategy.png) | ![Sparklines](screenshots/graph-sparklines.png) |
+| **① Strategy** — Tyre stint timeline with compound colours | **② Sparklines** — Per-driver lap-time sparklines |
+| ![Race Pace](screenshots/graph-race-pace.png) | ![Sector Pace](screenshots/graph-sector-pace.png) |
+| **③ Pace** — Race pace distribution per driver | **④ Sectors** — Sector breakdown across all laps |
+| ![Speed Traps](screenshots/graph-speed-traps.png) | ![Track Positions](screenshots/graph-track-positions-by-laps.png) |
+| **⑤ Speed Trap** — Top speed by driver | **⑥ Positions** — Race position changes lap-by-lap |
+| ![Team Pace](screenshots/graph-team-pace.png) | ![Pit Stops](screenshots/graph-pitstops.png) |
+| **⑦ Team Pace** — Constructor-level pace comparison | **⑧ Pit Stops** — Ranked stop durations with tier colouring |
+
+![All Heatmap](screenshots/all-heatmap.png)
+**Speed Heatmap** — Full-field speed trace overlaid on circuit
 
 ---
 
