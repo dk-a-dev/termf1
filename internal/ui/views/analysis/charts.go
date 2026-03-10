@@ -30,6 +30,10 @@ func (a *Analysis) renderChart(w, h int) string {
 		return a.renderSectorChart(w, h)
 	case ChartSpeed:
 		return a.renderSpeedChart(w, h)
+	case ChartPositions:
+		return a.renderPositionChart(w, h)
+	case ChartTeamPace:
+		return a.renderTeamPaceChart(w, h)
 	}
 	return ""
 }

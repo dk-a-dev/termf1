@@ -1,6 +1,6 @@
 # termf1-v1 🏎
 
-A full-featured **Formula 1 terminal dashboard** built with Go and [Charm](https://charm.sh/) — standings, race calendar, circuit track maps, driver statistics, live weather, and an AI chat powered by Groq.
+A full-featured **Formula 1 terminal UI** built with Go and [Charm](https://charm.sh/) — standings, race calendar, circuit track maps, driver statistics, live weather, and an AI chat powered by Groq.
 
 ---
 

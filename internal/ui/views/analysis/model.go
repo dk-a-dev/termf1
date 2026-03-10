@@ -23,6 +23,8 @@ const (
 	ChartPace
 	ChartSectors
 	ChartSpeed
+	ChartPositions // position changes per lap
+	ChartTeamPace  // team pace comparison box plot
 	NumCharts
 )
 
@@ -33,16 +35,19 @@ var chartNames = []string{
 	"④ Pace",
 	"⑤ Sectors",
 	"⑥ Speed",
+	"⑦ Positions",
+	"⑧ Team Pace",
 }
 
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 // DataMsg carries fetched session data back to the Update loop.
 type DataMsg struct {
-	Session openf1.Session
-	Drivers []openf1.Driver
-	Laps    []openf1.Lap
-	Stints  []openf1.Stint
+	Session   openf1.Session
+	Drivers   []openf1.Driver
+	Laps      []openf1.Lap
+	Stints    []openf1.Stint
+	Positions []openf1.Position
 }
 
 // ErrMsg carries a fetch error.
@@ -59,11 +64,12 @@ type Analysis struct {
 	fetched bool
 	err     error
 
-	chart   int
-	session openf1.Session
-	drivers []openf1.Driver
-	laps    []openf1.Lap
-	stints  []openf1.Stint
+	chart     int
+	session   openf1.Session
+	drivers   []openf1.Driver
+	laps      []openf1.Lap
+	stints    []openf1.Stint
+	positions []openf1.Position
 
 	viewport viewport.Model
 	spin     spinner.Model
@@ -116,6 +122,7 @@ func (a *Analysis) UpdateAnalysis(msg tea.Msg) (*Analysis, tea.Cmd) {
 		a.drivers = msg.Drivers
 		a.laps = msg.Laps
 		a.stints = msg.Stints
+		a.positions = msg.Positions
 		a.reloadViewport()
 		return a, nil
 

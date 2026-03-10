@@ -69,8 +69,8 @@ func (a *Analysis) renderLapLineChart(w, h int) string {
         drvs = append(drvs, drvData{num, drv.NameAcronym, drv.TeamName, pts, best})
     }
     sort.Slice(drvs, func(i, j int) bool { return drvs[i].best < drvs[j].best })
-    if len(drvs) > 8 {
-        drvs = drvs[:8] // top 8 for clarity
+    if len(drvs) > 20 {
+        drvs = drvs[:20] // cap at 20 for clarity
     }
 
     // Y range: use p5–p95 of clean laps to exclude outliers.
@@ -146,9 +146,10 @@ func (a *Analysis) renderLapLineChart(w, h int) string {
         return r
     }
 
-    // Draw each driver's trace.
-    for _, d := range drvs {
+    // Draw each driver's trace using a distinct line style.
+    for di, d := range drvs {
         col := styles.TeamColor(d.teamName)
+        st := posLineStyles[di%len(posLineStyles)]
         prevC, prevR := -1, -1
         for _, p := range d.pts {
             if p.t < tMin || p.t > tMax {
@@ -158,27 +159,22 @@ func (a *Analysis) renderLapLineChart(w, h int) string {
             c := lapToCol(p.lap)
             r := timeToRow(p.t)
 
-            // Draw horizontal connector (─) between previous and current point.
+            // Draw connector between previous and current point.
             if prevC >= 0 && c > prevC+1 {
-                midR := (prevR + r) / 2
                 for ic := prevC + 1; ic < c; ic++ {
                     if ic >= 0 && ic < cW {
                         ir := prevR + (r-prevR)*(ic-prevC)/(c-prevC)
                         if ir >= 0 && ir < cH && !grid[ir][ic].set {
-                            grid[ir][ic] = cell{'─', col, true}
-                        }
-                        // also fill midpoint connector
-                        if midR >= 0 && midR < cH && !grid[midR][ic].set {
-                            _ = midR // suppress unused
+                            grid[ir][ic] = cell{st.hori, col, true}
                         }
                     }
                 }
             }
 
-            // Place data point — ● for normal laps, P for pit entry.
-            sym := '●'
+            // Place data point.
+            sym := st.dot
             if p.isPit {
-                sym = 'p'
+                sym = 'P'
             }
             if pits, ok := pitLaps[d.num]; ok && pits[p.lap] {
                 sym = 'P'
@@ -234,19 +230,21 @@ func (a *Analysis) renderLapLineChart(w, h int) string {
     sb.WriteString("  " + safeRep(" ", yAxisW+1) + styles.DimStyle.Render(string(ticks)) + "\n")
     sb.WriteString("  " + safeRep(" ", yAxisW+1+cW/2) + styles.DimStyle.Render("Lap →") + "\n")
 
-    // Legend — driver colour squares.
+    // Legend — driver colour with line style indicator.
     sb.WriteString("\n  ")
-    for _, d := range drvs {
+    for di, d := range drvs {
         col := styles.TeamColor(d.teamName)
+        st := posLineStyles[di%len(posLineStyles)]
         acronym := d.acronym
         if acronym == "" {
             acronym = fmt.Sprintf("#%d", d.num)
         }
-        sb.WriteString(lipgloss.NewStyle().Foreground(col).Render("● "+acronym))
+        indicator := string(st.dot) + string(st.hori)
+        sb.WriteString(lipgloss.NewStyle().Foreground(col).Render(indicator+" "+acronym))
         sb.WriteString("  ")
     }
     sb.WriteString("\n")
-    sb.WriteString(styles.DimStyle.Render("  ─ = lap connector   P = pit stop entry   +/h ←→/l scroll   r refresh"))
+    sb.WriteString(styles.DimStyle.Render("  P = pit stop entry   +/h ←→/l scroll   r refresh"))
     return sb.String()
 }
 
