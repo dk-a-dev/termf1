@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -29,10 +30,25 @@ func (c *Client) get(ctx context.Context, path string, params map[string]string,
 		return fmt.Errorf("building request: %w", err)
 	}
 	q := req.URL.Query()
+	var rawExtras []string
 	for k, v := range params {
-		q.Set(k, v)
+		// OpenF1 uses bare operator syntax: date>VALUE and date<VALUE (no = sign).
+		// We must append these literally to RawQuery rather than letting url.Values
+		// encode them as date%3E=VALUE, which the API does not recognise.
+		if strings.HasSuffix(k, ">") || strings.HasSuffix(k, "<") {
+			rawExtras = append(rawExtras, k+v)
+		} else {
+			q.Set(k, v)
+		}
 	}
-	req.URL.RawQuery = q.Encode()
+	rawQ := q.Encode()
+	for _, extra := range rawExtras {
+		if rawQ != "" {
+			rawQ += "&"
+		}
+		rawQ += extra
+	}
+	req.URL.RawQuery = rawQ
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -103,6 +119,41 @@ func (c *Client) GetRaceControl(ctx context.Context, sessionKey int) ([]RaceCont
 func (c *Client) GetSessionResults(ctx context.Context, sessionKey int) ([]SessionResult, error) {
 	var out []SessionResult
 	return out, c.get(ctx, "/session_result", skParam(sessionKey), &out)
+}
+
+// GetCarData returns per-sample car telemetry for a driver within an optional
+// date range. dateGt / dateLt are ISO-8601 strings; pass empty strings to omit.
+func (c *Client) GetCarData(ctx context.Context, sessionKey, driverNumber int, dateGt, dateLt string) ([]CarData, error) {
+	params := map[string]string{
+		"session_key":   fmt.Sprintf("%d", sessionKey),
+		"driver_number": fmt.Sprintf("%d", driverNumber),
+	}
+	if dateGt != "" {
+		params["date>"] = dateGt
+	}
+	if dateLt != "" {
+		params["date<"] = dateLt
+	}
+	var out []CarData
+	return out, c.get(ctx, "/car_data", params, &out)
+}
+
+// GetCarLocations returns per-sample GPS location data for a driver within an
+// optional date range. dateGt / dateLt are ISO-8601 strings; pass empty strings
+// to omit. The /location endpoint does not support lap_number filtering.
+func (c *Client) GetCarLocations(ctx context.Context, sessionKey, driverNumber int, dateGt, dateLt string) ([]CarLocation, error) {
+	params := map[string]string{
+		"session_key":   fmt.Sprintf("%d", sessionKey),
+		"driver_number": fmt.Sprintf("%d", driverNumber),
+	}
+	if dateGt != "" {
+		params["date>"] = dateGt
+	}
+	if dateLt != "" {
+		params["date<"] = dateLt
+	}
+	var out []CarLocation
+	return out, c.get(ctx, "/location", params, &out)
 }
 
 // DashboardPayload aggregates all data needed to render the live timing screen.

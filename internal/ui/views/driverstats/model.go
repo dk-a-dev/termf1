@@ -2,6 +2,7 @@ package driverstats
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -76,7 +77,7 @@ type DriverStats struct {
 	viewport   viewport.Model
 	spin       spinner.Model
 	cursor     int // selected driver
-	tab        int // 0=overview 1=lap analysis 2=sectors
+	tab        int // 0=overview 1=lap analysis 2=sectors 3=compare
 }
 
 func NewDriverStats(of1 *openf1.Client, joli *jolpica.Client) *DriverStats {
@@ -132,7 +133,7 @@ func (d *DriverStats) UpdateDriverStats(msg tea.Msg) (*DriverStats, tea.Cmd) {
 			}
 			return d, nil
 		case "t":
-			d.tab = (d.tab + 1) % 3
+			d.tab = (d.tab + 1) % 4
 			d.viewport.SetContent(d.buildContent())
 			d.viewport.GotoTop()
 			return d, nil
@@ -215,7 +216,7 @@ func (d *DriverStats) renderSelector() string {
 }
 
 func (d *DriverStats) renderTabs() string {
-	tabs := []string{"Overview", "Lap Analysis", "Sector Breakdown"}
+	tabs := []string{"Overview", "Lap Analysis", "Sector Breakdown", "Compare"}
 	var rendered []string
 	for i, t := range tabs {
 		if i == d.tab {
@@ -243,6 +244,8 @@ func (d *DriverStats) buildContent() string {
 		return d.renderLapAnalysis(p)
 	case 2:
 		return d.renderSectors(p)
+	case 3:
+		return d.renderCompare()
 	}
 	return ""
 }
@@ -742,6 +745,233 @@ func buildProfiles(msg driverStatsDataMsg) []driverProfile {
 	}
 
 	return profiles
+}
+
+// ── Compare tab ───────────────────────────────────────────────────────────────
+
+// renderCompare shows all drivers ranked side-by-side:
+//   - Best lap bar chart (horizontal, team coloured)
+//   - Avg lap gap to leader
+//   - Best sector times vs theoretical best
+func (d *DriverStats) renderCompare() string {
+	if len(d.profiles) == 0 {
+		return styles.DimStyle.Render("No data available for comparison.")
+	}
+
+	// Sort by best lap for the ranking.
+	sorted := make([]driverProfile, len(d.profiles))
+	copy(sorted, d.profiles)
+	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].bestLap <= 0 {
+			return false
+		}
+		if sorted[j].bestLap <= 0 {
+			return true
+		}
+		return sorted[i].bestLap < sorted[j].bestLap
+	})
+
+	poleBest := 0.0
+	for _, p := range sorted {
+		if p.bestLap > 0 {
+			poleBest = p.bestLap
+			break
+		}
+	}
+	if poleBest == 0 {
+		return styles.DimStyle.Render("No lap time data.")
+	}
+
+	// Theoretical best sectors
+	bestS1, bestS2, bestS3 := math.MaxFloat64, math.MaxFloat64, math.MaxFloat64
+	for _, p := range sorted {
+		if p.avgS1 > 0 && p.avgS1 < bestS1 {
+			bestS1 = p.avgS1
+		}
+		if p.avgS2 > 0 && p.avgS2 < bestS2 {
+			bestS2 = p.avgS2
+		}
+		if p.avgS3 > 0 && p.avgS3 < bestS3 {
+			bestS3 = p.avgS3
+		}
+	}
+	theoreticalBest := 0.0
+	if bestS1 < math.MaxFloat64 && bestS2 < math.MaxFloat64 && bestS3 < math.MaxFloat64 {
+		theoreticalBest = bestS1 + bestS2 + bestS3
+	}
+
+	// Widths
+	w := d.width - 4
+	const (
+		labelW  = 5
+		timeW   = 10
+		deltaW  = 9
+		sectorW = 24 // "S1:23.456 S2:23.456 S3:23.456"
+	)
+	barW := w - labelW - timeW - deltaW - sectorW - 6
+	if barW < 10 {
+		barW = 10
+	}
+	maxDelta := 0.001
+	for _, p := range sorted {
+		if p.bestLap > 0 {
+			if d := p.bestLap - poleBest; d > maxDelta {
+				maxDelta = d
+			}
+		}
+	}
+
+	var lines []string
+	lines = append(lines, "",
+		lipgloss.NewStyle().Bold(true).Foreground(styles.ColorSubtle).
+			Render(fmt.Sprintf("  DRIVER COMPARISON  —  %d drivers", len(sorted))),
+		"",
+	)
+
+	// Theoretical best row
+	if theoreticalBest > 0 {
+		tbStr := lipgloss.NewStyle().Foreground(styles.ColorPurple).Bold(true).
+			Render(fmt.Sprintf("  Theoretical best: %s", common.FormatDuration(theoreticalBest)))
+		lines = append(lines, tbStr, "")
+	}
+
+	// Header
+	hdr := fmt.Sprintf("  %-*s  %-*s  %-*s  %-s",
+		labelW, "DRV",
+		timeW, "BEST LAP",
+		deltaW, "Δ POLE",
+		"BEST LAP GAP →")
+	lines = append(lines, styles.DimStyle.Render(hdr))
+	lines = append(lines, "  "+strings.Repeat("─", w-2))
+
+	for rank, p := range sorted {
+		col := lipgloss.Color("#" + p.teamColor)
+		if p.teamColor == "" {
+			col = styles.ColorSubtle
+		}
+		acronym := p.acronym
+		if acronym == "" {
+			acronym = fmt.Sprintf("#%d", p.number)
+		}
+
+		posStr := styles.DimStyle.Render(fmt.Sprintf("P%-2d", rank+1))
+		label := lipgloss.NewStyle().Foreground(col).Bold(true).Width(labelW).Render(acronym)
+
+		var lapStr, deltaStr string
+		var barLen int
+		if p.bestLap > 0 {
+			lapStr = lipgloss.NewStyle().Foreground(col).Render(common.FormatDuration(p.bestLap))
+			delta := p.bestLap - poleBest
+			if rank == 0 {
+				deltaStr = lipgloss.NewStyle().Foreground(styles.ColorGreen).Bold(true).Render("FASTEST")
+			} else {
+				deltaStr = styles.DimStyle.Render(fmt.Sprintf("+%.3fs", delta))
+			}
+			barLen = int(float64(barW) * (p.bestLap - poleBest) / maxDelta)
+			if barLen > barW {
+				barLen = barW
+			}
+		} else {
+			lapStr = styles.DimStyle.Render("  —  ")
+			deltaStr = styles.DimStyle.Render("  —  ")
+		}
+
+		// Coloured filled bar
+		bar := lipgloss.NewStyle().Foreground(col).Render(strings.Repeat("█", barLen)) +
+			styles.DimStyle.Render(strings.Repeat("·", barW-barLen))
+
+		// Sector summary (avg)
+		s1 := "—"
+		s2 := "—"
+		s3 := "—"
+		if p.avgS1 > 0 {
+			s1 = common.FormatSector(p.avgS1)
+		}
+		if p.avgS2 > 0 {
+			s2 = common.FormatSector(p.avgS2)
+		}
+		if p.avgS3 > 0 {
+			s3 = common.FormatSector(p.avgS3)
+		}
+		sectors := styles.DimStyle.Render(fmt.Sprintf(" S1:%s S2:%s S3:%s", s1, s2, s3))
+
+		row := fmt.Sprintf("  %s %s  %-*s  %-*s  %s%s",
+			posStr, label,
+			timeW, lapStr,
+			deltaW, deltaStr,
+			bar, sectors)
+		lines = append(lines, row)
+	}
+
+	// Avg pace section
+	lines = append(lines, "", "  "+strings.Repeat("─", w-2),
+		styles.DimStyle.Render("  AVERAGE RACE PACE  (outlaps/SC laps filtered)"),
+		"",
+	)
+
+	// Sort by avg lap for avg pace chart
+	sorted2 := make([]driverProfile, len(sorted))
+	copy(sorted2, sorted)
+	sort.Slice(sorted2, func(i, j int) bool {
+		if sorted2[i].avgLap <= 0 {
+			return false
+		}
+		if sorted2[j].avgLap <= 0 {
+			return true
+		}
+		return sorted2[i].avgLap < sorted2[j].avgLap
+	})
+	poleAvg := 0.0
+	for _, p := range sorted2 {
+		if p.avgLap > 0 {
+			poleAvg = p.avgLap
+			break
+		}
+	}
+	maxAvgDelta := 0.001
+	for _, p := range sorted2 {
+		if p.avgLap > 0 {
+			if d := p.avgLap - poleAvg; d > maxAvgDelta {
+				maxAvgDelta = d
+			}
+		}
+	}
+
+	for rank, p := range sorted2 {
+		col := lipgloss.Color("#" + p.teamColor)
+		if p.teamColor == "" {
+			col = styles.ColorSubtle
+		}
+		acronym := p.acronym
+		if acronym == "" {
+			acronym = fmt.Sprintf("#%d", p.number)
+		}
+		posStr := styles.DimStyle.Render(fmt.Sprintf("P%-2d", rank+1))
+		label := lipgloss.NewStyle().Foreground(col).Bold(true).Width(labelW).Render(acronym)
+
+		if p.avgLap <= 0 {
+			lines = append(lines, fmt.Sprintf("  %s %s  —", posStr, label))
+			continue
+		}
+		lapStr := lipgloss.NewStyle().Foreground(col).Render(common.FormatDuration(p.avgLap))
+		delta := p.avgLap - poleAvg
+		var deltaStr string
+		if rank == 0 {
+			deltaStr = lipgloss.NewStyle().Foreground(styles.ColorGreen).Bold(true).Render("FASTEST")
+		} else {
+			deltaStr = styles.DimStyle.Render(fmt.Sprintf("+%.3fs", delta))
+		}
+		barLen := int(float64(barW) * delta / maxAvgDelta)
+		if barLen > barW {
+			barLen = barW
+		}
+		bar := lipgloss.NewStyle().Foreground(col).Render(strings.Repeat("▒", barLen)) +
+			styles.DimStyle.Render(strings.Repeat("·", barW-barLen))
+		lines = append(lines, fmt.Sprintf("  %s %s  %-*s  %-*s  %s",
+			posStr, label, timeW, lapStr, deltaW, deltaStr, bar))
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 // ── command ───────────────────────────────────────────────────────────────────

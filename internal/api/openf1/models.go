@@ -133,3 +133,28 @@ type RaceControl struct {
 	Sector       interface{} `json:"sector"`
 	SessionKey   int         `json:"session_key"`
 }
+
+// CarData holds per-sample car telemetry (speed, throttle, brake, RPM, gear, DRS).
+type CarData struct {
+	Brake        int    `json:"brake"`
+	Date         string `json:"date"`
+	Drs          int    `json:"drs"`
+	DriverNumber int    `json:"driver_number"`
+	Gear         int    `json:"n_gear"`
+	MeetingKey   int    `json:"meeting_key"`
+	RPM          int    `json:"rpm"`
+	SessionKey   int    `json:"session_key"`
+	Speed        int    `json:"speed"`
+	Throttle     int    `json:"throttle"`
+}
+
+// CarLocation holds the on-track X/Y/Z telemetry position for a car.
+type CarLocation struct {
+	Date         string `json:"date"`
+	DriverNumber int    `json:"driver_number"`
+	MeetingKey   int    `json:"meeting_key"`
+	SessionKey   int    `json:"session_key"`
+	X            int    `json:"x"`
+	Y            int    `json:"y"`
+	Z            int    `json:"z"`
+}

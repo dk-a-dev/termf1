@@ -3,3 +3,4 @@ termf1.exe
 .env
 dist/
 termf1-server
+python
