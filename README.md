@@ -78,7 +78,7 @@ A dedicated deep-dive view for any completed session — navigate to any race we
 
 ### Option 1 — Download pre-built binary (recommended)
 
-Go to [Releases](https://github.com/devkeshwani/termf1/releases/latest) and download the archive for your platform:
+Go to [Releases](https://github.com/dk-a-dev/termf1/releases/latest) and download the archive for your platform:
 
 | Platform | File |
 |----------|------|
@@ -98,7 +98,7 @@ export GROQ_API_KEY=your_key_here
 ### Option 2 — Build from source
 
 ```bash
-git clone https://github.com/devkeshwani/termf1
+git clone https://github.com/dk-a-dev/termf1
 cd termf1
 cp .env.example .env   # fill in your GROQ_API_KEY
 source .env
@@ -115,7 +115,7 @@ make install   # then just: termf1
 
 ```bash
 export GROQ_API_KEY=your_key_here
-go install github.com/devkeshwani/termf1@latest
+go installgithub.com/dk-a-dev/termf1@latest
 termf1
 ```
 
