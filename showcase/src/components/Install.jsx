@@ -9,7 +9,7 @@ const METHODS = [
     steps: [
       {
         comment: '# Download from GitHub Releases',
-        cmd: 'curl -L https://github.com/dk-a-dev/termf1/releases/latest/download/termf1-darwin-arm64.tar.gz | tar xz',
+        cmd: 'curl -fsSL https://raw.githubusercontent.com/dk-a-dev/termf1/master/install.sh | bash     ',
       },
       {
         comment: '# Set your Groq API key (free tier works)',
