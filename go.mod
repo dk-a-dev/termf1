@@ -1,4 +1,4 @@
-module github.com/dk-a-dev/termf1
+module github.com/dk-a-dev/termf1/v2
 
 go 1.25.0
 

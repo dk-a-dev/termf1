@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dk-a-dev/termf1/internal/api/jolpica"
-	"github.com/dk-a-dev/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/v2/internal/api/jolpica"
+	"github.com/dk-a-dev/termf1/v2/internal/ui/styles"
 )
 
 // RenderStandings formats the driver and constructor standings into a single string.

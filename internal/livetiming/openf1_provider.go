@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dk-a-dev/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/v2/internal/api/openf1"
 )
 
 // OpenF1Provider implements StreamProvider by periodically polling the OpenF1 API

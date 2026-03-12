@@ -115,7 +115,7 @@ make install   # then just: termf1
 
 ```bash
 export GROQ_API_KEY=your_key_here
-go installgithub.com/dk-a-dev/termf1@latest
+go installgithub.com/dk-a-dev/termf1/v2@latest
 termf1
 ```
 

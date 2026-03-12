@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dk-a-dev/termf1/cmd"
+	"github.com/dk-a-dev/termf1/v2/cmd"
 )
 
 // version is set at build time via -ldflags "-X main.version=v1.2.3"

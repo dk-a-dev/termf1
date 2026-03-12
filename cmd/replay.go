@@ -10,9 +10,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dk-a-dev/termf1/internal/config"
-	"github.com/dk-a-dev/termf1/internal/livetiming"
-	"github.com/dk-a-dev/termf1/internal/ui"
+	"github.com/dk-a-dev/termf1/v2/internal/config"
+	"github.com/dk-a-dev/termf1/v2/internal/livetiming"
+	"github.com/dk-a-dev/termf1/v2/internal/ui"
 	"github.com/spf13/cobra"
 )
 

@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dk-a-dev/termf1/internal/api/openf1"
-	"github.com/dk-a-dev/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/v2/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/v2/internal/ui/styles"
 )
 
 // ── DriverRow: processed view-model for one car (OpenF1 data) ────────────────

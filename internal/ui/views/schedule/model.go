@@ -7,10 +7,10 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/bubbletea"
-	"github.com/dk-a-dev/termf1/internal/ui/views/common"
+	"github.com/dk-a-dev/termf1/v2/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dk-a-dev/termf1/internal/api/jolpica"
-	"github.com/dk-a-dev/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/v2/internal/api/jolpica"
+	"github.com/dk-a-dev/termf1/v2/internal/ui/styles"
 )
 
 // ── Messages ──────────────────────────────────────────────────────────────────

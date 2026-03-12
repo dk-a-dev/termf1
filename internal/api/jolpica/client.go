@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dk-a-dev/termf1/internal/api/cache"
+	"github.com/dk-a-dev/termf1/v2/internal/api/cache"
 )
 
 const baseURL = "https://api.jolpi.ca/ergast/f1"

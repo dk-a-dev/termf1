@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"github.com/dk-a-dev/termf1/internal/api/jolpica"
-	"github.com/dk-a-dev/termf1/internal/ui/views/standings"
+	"github.com/dk-a-dev/termf1/v2/internal/api/jolpica"
+	"github.com/dk-a-dev/termf1/v2/internal/ui/views/standings"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )

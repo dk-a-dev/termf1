@@ -5,7 +5,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dk-a-dev/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/v2/internal/api/openf1"
 )
 
 // FetchCmd returns a Cmd that fetches session data sequentially from OpenF1,

@@ -5,9 +5,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dk-a-dev/termf1/internal/api/liveserver"
-	"github.com/dk-a-dev/termf1/internal/api/multiviewer"
-	"github.com/dk-a-dev/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/v2/internal/api/liveserver"
+	"github.com/dk-a-dev/termf1/v2/internal/api/multiviewer"
+	"github.com/dk-a-dev/termf1/v2/internal/api/openf1"
 )
 
 // fetchCmd implements a three-tier data strategy:

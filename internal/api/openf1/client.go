@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dk-a-dev/termf1/internal/api/cache"
+	"github.com/dk-a-dev/termf1/v2/internal/api/cache"
 )
 
 const baseURL = "https://api.openf1.org/v1"
