@@ -16,8 +16,17 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "termf1",
 	Short: "A full-featured Formula 1 terminal UI",
-	Long: `termf1 is a terminal-based Formula 1 dashboard providing live timing,
-championship standings, schedule, race analysis, and AI chat.`,
+	Long: `___________  _______   _______   ___      ___   _______   ____    
+("     _   ")/"     "| /"      \ |"  \    /"  | /"     "| /  " \   
+ )__/  \\__/(: ______)|:        | \   \  //   |(: ______)/__|| |   
+    \\_ /    \/    |  |_____/   ) /\\  \/.    | \/    |     |: |   
+    |.  |    // ___)_  //      / |: \.        | // ___)    _\  |   
+    \:  |   (:      "||:  __   \ |.  \    /:  |(:  (      /" \_|\  
+     \__|    \_______)|__|  \___)|___|\__/|___| \__/     (_______) 
+                                                                   
+
+termf1 is a terminal-based Formula 1 dashboard providing live timing,
+championship standings, schedule, race analysis`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
