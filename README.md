@@ -1,4 +1,4 @@
-# termf1 🏎
+# termf1 🏎 
 
 > **A full-featured Formula 1 terminal UI** built with Go and [Charm](https://charm.sh/)
 
@@ -6,7 +6,7 @@ Real race analysis, live standings, circuit track maps, pit stop insights, AI ch
 
 [![Go 1.22+](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org)
 [![OpenF1](https://img.shields.io/badge/data-OpenF1-red)](https://openf1.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+ <a href="https://www.buymeacoffee.com/devkeshwan1" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 25px !important;width: 100px !important;" ></a>
 
 ---
 
@@ -248,9 +248,4 @@ termf1/
 │               ├── teampace.go    constructor pace comparison
 │               └── pitstops.go    pit stop duration ranked chart
 ```
-
----
-
-> v1 was vibecoded. v2 is structured, data-accurate, and built to be extended.
-> v3 brings it live.
 
