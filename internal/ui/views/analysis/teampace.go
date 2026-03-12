@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/devkeshwani/termf1/internal/ui/styles"
-	"github.com/devkeshwani/termf1/internal/ui/views/common"
+	"github.com/dk-a-dev/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/internal/ui/views/common"
 )
 
 // ── Chart 8: Team Pace Comparison ────────────────────────────────────────────

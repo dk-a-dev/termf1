@@ -9,11 +9,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbletea"
-	"github.com/devkeshwani/termf1/internal/ui/views/common"
+	"github.com/dk-a-dev/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/devkeshwani/termf1/internal/api/multiviewer"
-	"github.com/devkeshwani/termf1/internal/api/openf1"
-	"github.com/devkeshwani/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/internal/api/multiviewer"
+	"github.com/dk-a-dev/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/internal/ui/styles"
 )
 
 // ── Messages ──────────────────────────────────────────────────────────────────

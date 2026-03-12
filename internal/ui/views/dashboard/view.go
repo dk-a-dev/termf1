@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/devkeshwani/termf1/internal/ui/views/common"
-	"github.com/devkeshwani/termf1/internal/api/liveserver"
-	"github.com/devkeshwani/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/internal/ui/views/common"
+	"github.com/dk-a-dev/termf1/internal/api/liveserver"
+	"github.com/dk-a-dev/termf1/internal/ui/styles"
 )
 
 // View renders the full dashboard.

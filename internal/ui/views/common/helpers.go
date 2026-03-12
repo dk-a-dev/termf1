@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/devkeshwani/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/internal/ui/styles"
 )
 
 // Centred places s in the centre of a w×h terminal region.

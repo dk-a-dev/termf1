@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/harmonica"
-	"github.com/devkeshwani/termf1/internal/api/liveserver"
-	"github.com/devkeshwani/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/internal/api/liveserver"
+	"github.com/dk-a-dev/termf1/internal/api/openf1"
 )
 
 // buildLiveRows converts a live State snapshot into sorted liveRow slice,

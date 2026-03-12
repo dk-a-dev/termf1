@@ -28,7 +28,7 @@ const METHODS = [
     steps: [
       {
         comment: '# One-liner install',
-        cmd: 'go install github.com/dk-a-dev/termf1@latest',
+        cmd: 'go installgithub.com/dk-a-dev/termf1@latest',
       },
       {
         comment: '# Set API key',
