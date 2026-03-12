@@ -11,11 +11,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/devkeshwani/termf1/internal/livetiming"
+	"github.com/dk-a-dev/termf1/internal/api/openf1"
+	"github.com/dk-a-dev/termf1/internal/livetiming"
 )
 
 func main() {
 	addr := flag.String("addr", ":8765", "HTTP listen address")
+	recordFile := flag.String("record", "", "Enable recording to specified filename (or 'auto' for timestamped file)")
+	replayFile := flag.String("replay", "", "Play back a previously recorded .jsonl session file")
 	flag.Parse()
 
 	logger := log.New(os.Stderr, "[termf1-server] ", log.LstdFlags)
@@ -31,11 +34,46 @@ func main() {
 	// write — handled via a goroutine that watches UpdatedAt.
 	go watchAndNotify(state, srv)
 
-	// Start the SignalR client.
-	client := livetiming.NewClient(state, logger)
+	var mainProvider livetiming.StreamProvider
+
+	if *replayFile != "" {
+		// Replay mode: bypass openF1 fallback and SignalR
+		logger.Printf("Starting in REPLAY mode: %s", *replayFile)
+		mainProvider = livetiming.NewReplayProvider(state, *replayFile, logger)
+	} else {
+		// Live mode
+		var providers []livetiming.StreamProvider
+
+		if os.Getenv("DISABLE_WSS") != "1" {
+			sigClient := livetiming.NewClient(state, logger)
+			
+			if *recordFile != "" {
+				filename := *recordFile
+				if filename == "auto" {
+					filename = ""
+				}
+				rec, err := livetiming.NewRecorder(filename)
+				if err != nil {
+					logger.Fatalf("failed to init recorder: %v", err)
+				}
+				defer rec.Close()
+				sigClient.SetRecorder(rec)
+				logger.Printf("Recording stream to TermF1 data directory")
+			}
+			providers = append(providers, sigClient)
+		}
+
+		of1Client := openf1.NewClient()
+		of1Provider := livetiming.NewOpenF1Provider(state, of1Client, logger)
+		providers = append(providers, of1Provider)
+
+		mainProvider = livetiming.NewFallbackProvider(logger, providers...)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.Run(ctx)
+
+	go mainProvider.Run(ctx)
 
 	// Start HTTP server.
 	httpSrv := &http.Server{
