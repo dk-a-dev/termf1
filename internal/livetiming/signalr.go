@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -76,9 +77,10 @@ type feedItem struct {
 // updates into a *State.
 type Client struct {
 	state  *State
-	conn   *websocket.Conn
-	done   chan struct{}
-	logger *log.Logger
+	conn     *websocket.Conn
+	done     chan struct{}
+	logger   *log.Logger
+	recorder *Recorder
 }
 
 // NewClient creates a Client backed by the given state.
@@ -90,27 +92,41 @@ func NewClient(state *State, logger *log.Logger) *Client {
 	}
 }
 
+// SetRecorder attaches a Recorder to save raw incoming JSON frames.
+func (c *Client) SetRecorder(r *Recorder) {
+	c.recorder = r
+}
+
 // Run connects, negotiates, subscribes and reads messages until ctx is
-// cancelled or the connection drops.  It reconnects automatically with
-// exponential back-off.
-func (c *Client) Run(ctx context.Context) {
+// cancelled, or it fails to connect 3 consecutive times.
+func (c *Client) Run(ctx context.Context) error {
 	bo := time.Second
+	failures := 0
+	const maxFailures = 3
+
 	for {
 		if err := c.runOnce(ctx); err != nil {
 			if ctx.Err() != nil {
-				return
+				return nil
 			}
-			c.logger.Printf("[signalr] disconnected: %v — reconnecting in %s", err, bo)
+			failures++
+			c.logger.Printf("[signalr] disconnected: %v — reconnecting in %s (attempt %d/%d)", err, bo, failures, maxFailures)
+			
+			if failures >= maxFailures {
+				return fmt.Errorf("signalr client failed after %d attempts: %w", failures, err)
+			}
+			
 			select {
 			case <-time.After(bo):
 			case <-ctx.Done():
-				return
+				return nil
 			}
 			if bo < 60*time.Second {
 				bo *= 2
 			}
 		} else {
 			bo = time.Second
+			failures = 0
 		}
 	}
 }
@@ -123,9 +139,13 @@ func (c *Client) runOnce(ctx context.Context) error {
 
 	wsURL := buildWSURL(token)
 	dialer := websocket.DefaultDialer
-	conn, _, err := dialer.DialContext(ctx, wsURL, http.Header{
-		"User-Agent": []string{"termf1/1.0"},
-	})
+	
+	headers := http.Header{"User-Agent": []string{"termf1/1.0"}}
+	if f1Token := os.Getenv("F1TV_TOKEN"); f1Token != "" {
+		headers.Set("Cookie", fmt.Sprintf("formula1AccessToken=%s", f1Token))
+	}
+
+	conn, _, err := dialer.DialContext(ctx, wsURL, headers)
 	if err != nil {
 		return fmt.Errorf("dial: %w", err)
 	}
@@ -166,6 +186,12 @@ func negotiate(ctx context.Context) (string, error) {
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	req.Header.Set("User-Agent", "termf1/1.0")
+	if f1Token := os.Getenv("F1TV_TOKEN"); f1Token != "" {
+		req.AddCookie(&http.Cookie{
+			Name:  "formula1AccessToken",
+			Value: f1Token,
+		})
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -225,12 +251,21 @@ func (c *Client) readLoop(conn *websocket.Conn) error {
 		if bytes.Equal(bytes.TrimSpace(raw), []byte("{}")) {
 			continue
 		}
-		c.dispatch(raw)
+
+		if os.Getenv("DEBUG_WSS") == "1" {
+			c.logger.Printf("[signalr] RAW INCOMING: %s", string(raw))
+		}
+
+		if c.recorder != nil {
+			_ = c.recorder.Write(raw)
+		}
+
+		c.Dispatch(raw)
 	}
 }
 
-// dispatch routes a raw SignalR JSON frame to the appropriate state update.
-func (c *Client) dispatch(raw []byte) {
+// Dispatch routes a raw SignalR JSON frame to the appropriate state update.
+func (c *Client) Dispatch(raw []byte) {
 	// The frame can have an "M" field that is either an array of feed items
 	// OR be a method invocation.  We unmarshal into a generic map first.
 	var frame map[string]json.RawMessage
