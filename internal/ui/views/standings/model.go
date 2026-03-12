@@ -1,16 +1,12 @@
 package standings
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbletea"
-	"github.com/devkeshwani/termf1/internal/ui/views/common"
+	"github.com/dk-a-dev/termf1/internal/ui/views/common"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/devkeshwani/termf1/internal/api/jolpica"
-	"github.com/devkeshwani/termf1/internal/ui/styles"
+	"github.com/dk-a-dev/termf1/internal/api/jolpica"
+	"github.com/dk-a-dev/termf1/internal/ui/styles"
 )
 
 // ── Messages ──────────────────────────────────────────────────────────────────
@@ -67,6 +63,7 @@ func (s *Standings) UpdateStandings(msg tea.Msg) (*Standings, tea.Cmd) {
 	return s, nil
 }
 
+// View returns the rendered standard output
 func (s *Standings) View() string {
 	if s.loading && len(s.drivers) == 0 {
 		return common.Centred(s.width, s.height, s.spin.View()+" Loading standings…")
@@ -75,113 +72,10 @@ func (s *Standings) View() string {
 		return common.Centred(s.width, s.height, styles.ErrorStyle.Render("⚠  "+s.err.Error()))
 	}
 
-	half := s.width / 2
-	if half < 30 {
-		return lipgloss.JoinVertical(lipgloss.Left,
-			s.driverStandingsTable(s.width),
-			"",
-			s.constructorStandingsTable(s.width),
-		)
-	}
-
-	left := s.driverStandingsTable(half - 1)
-	right := s.constructorStandingsTable(s.width - half - 1)
-	return lipgloss.JoinHorizontal(lipgloss.Top, left, " ", right)
+	return RenderStandings(s.drivers, s.constructors, s.width)
 }
 
-// ── Driver standings ──────────────────────────────────────────────────────────
 
-func (s *Standings) driverStandingsTable(w int) string {
-	title := styles.Title.Render("  Driver Championship")
-	sep := styles.Divider.Render(strings.Repeat("─", w))
-
-	// find max points for bar scaling
-	maxPts := 1.0
-	for _, d := range s.drivers {
-		if p, _ := strconv.ParseFloat(d.Points, 64); p > maxPts {
-			maxPts = p
-		}
-	}
-
-	barW := w - 28
-	if barW < 4 {
-		barW = 4
-	}
-
-	lines := []string{title, sep}
-	for _, d := range s.drivers {
-		pts, _ := strconv.ParseFloat(d.Points, 64)
-		pos, _ := strconv.Atoi(d.Position)
-
-		posStr := fmt.Sprintf("%2d", pos)
-		code := d.Driver.Code
-		if code == "" {
-			code = d.Driver.FamilyName
-			if len(code) > 3 {
-				code = code[:3]
-			}
-		}
-
-		// Team colour for the bar
-		teamCol := styles.ColorSubtle
-		if len(d.Constructors) > 0 {
-			teamCol = styles.TeamColor(d.Constructors[0].Name)
-		}
-
-		bar := styles.BarChart(pts, maxPts, barW, teamCol)
-		ptsStr := fmt.Sprintf("%4.0f", pts)
-
-		posC := lipgloss.NewStyle().Width(3).Foreground(common.PosColor(pos)).Bold(pos <= 3).Render(posStr)
-		codeC := lipgloss.NewStyle().Width(5).Bold(true).Foreground(styles.ColorText).Render(code)
-		ptsC := lipgloss.NewStyle().Width(5).Align(lipgloss.Right).Foreground(styles.ColorYellow).Render(ptsStr)
-
-		line := posC + codeC + bar + " " + ptsC
-		lines = append(lines, line)
-	}
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
-}
-
-// ── Constructor standings ─────────────────────────────────────────────────────
-
-func (s *Standings) constructorStandingsTable(w int) string {
-	title := styles.Title.Render("  Constructor Championship")
-	sep := styles.Divider.Render(strings.Repeat("─", w))
-
-	maxPts := 1.0
-	for _, c := range s.constructors {
-		if p, _ := strconv.ParseFloat(c.Points, 64); p > maxPts {
-			maxPts = p
-		}
-	}
-
-	barW := w - 28
-	if barW < 4 {
-		barW = 4
-	}
-
-	lines := []string{title, sep}
-	for _, c := range s.constructors {
-		pts, _ := strconv.ParseFloat(c.Points, 64)
-		pos, _ := strconv.Atoi(c.Position)
-
-		name := c.Constructor.Name
-		if len(name) > 12 {
-			name = name[:12]
-		}
-
-		teamCol := styles.TeamColor(c.Constructor.Name)
-		bar := styles.BarChart(pts, maxPts, barW, teamCol)
-		ptsStr := fmt.Sprintf("%4.0f", pts)
-
-		posC := lipgloss.NewStyle().Width(3).Foreground(common.PosColor(pos)).Bold(pos <= 3).Render(fmt.Sprintf("%2d", pos))
-		nameC := lipgloss.NewStyle().Width(14).Bold(true).Foreground(styles.ColorText).Render(name)
-		ptsC := lipgloss.NewStyle().Width(5).Align(lipgloss.Right).Foreground(styles.ColorYellow).Render(ptsStr)
-
-		line := posC + nameC + bar + " " + ptsC
-		lines = append(lines, line)
-	}
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
-}
 
 // ── command ───────────────────────────────────────────────────────────────────
 
