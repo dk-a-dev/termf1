@@ -4,3 +4,4 @@ termf1.exe
 dist/
 termf1-server
 python
+tests
