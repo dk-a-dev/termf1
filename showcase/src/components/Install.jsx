@@ -9,7 +9,7 @@ const METHODS = [
     steps: [
       {
         comment: '# Download from GitHub Releases',
-        cmd: 'curl -fsSL https://raw.githubusercontent.com/dk-a-dev/termf1/master/install.sh | bash     ',
+        cmd: 'curl -fsSL https://raw.githubusercontent.com/dk-a-dev/termf1/master/scripts/install.sh | bash     ',
       },
       {
         comment: '# Set your Groq API key (free tier works)',
