@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/dk-a-dev/termf1/internal/api/cache"
 )
 
 const baseURL = "https://api.jolpi.ca/ergast/f1"
@@ -14,12 +16,15 @@ const baseURL = "https://api.jolpi.ca/ergast/f1"
 type Client struct {
 	http    *http.Client
 	baseURL string
+	cache   *cache.Cache
 }
 
 func NewClient() *Client {
+	cc, _ := cache.New() // Ignore error, if cache fails we just won't cache (Wait, actually we need to handle cache being nil)
 	return &Client{
 		http:    &http.Client{Timeout: 15 * time.Second},
 		baseURL: baseURL,
+		cache:   cc,
 	}
 }
 
@@ -42,7 +47,18 @@ func (c *Client) get(ctx context.Context, path string, result interface{}) error
 // GetDriverStandings returns the current season driver championship standings.
 func (c *Client) GetDriverStandings(ctx context.Context) ([]DriverStanding, error) {
 	var r Response
-	if err := c.get(ctx, "/current/driverStandings.json", &r); err != nil {
+	fetch := func() error {
+		return c.get(ctx, "/current/driverStandings.json", &r)
+	}
+	
+	var err error
+	if c.cache != nil {
+		err = c.cache.Get(c.baseURL+"/current/driverStandings.json", 5*time.Minute, &r, fetch)
+	} else {
+		err = fetch()
+	}
+	
+	if err != nil {
 		return nil, err
 	}
 	if r.MRData.StandingsTable == nil || len(r.MRData.StandingsTable.StandingsLists) == 0 {
@@ -54,7 +70,18 @@ func (c *Client) GetDriverStandings(ctx context.Context) ([]DriverStanding, erro
 // GetConstructorStandings returns the current season constructor standings.
 func (c *Client) GetConstructorStandings(ctx context.Context) ([]ConstructorStanding, error) {
 	var r Response
-	if err := c.get(ctx, "/current/constructorStandings.json", &r); err != nil {
+	fetch := func() error {
+		return c.get(ctx, "/current/constructorStandings.json", &r)
+	}
+
+	var err error
+	if c.cache != nil {
+		err = c.cache.Get(c.baseURL+"/current/constructorStandings.json", 5*time.Minute, &r, fetch)
+	} else {
+		err = fetch()
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	if r.MRData.StandingsTable == nil || len(r.MRData.StandingsTable.StandingsLists) == 0 {
@@ -66,7 +93,18 @@ func (c *Client) GetConstructorStandings(ctx context.Context) ([]ConstructorStan
 // GetSchedule returns all races in the current season.
 func (c *Client) GetSchedule(ctx context.Context) ([]Race, error) {
 	var r Response
-	if err := c.get(ctx, "/current.json", &r); err != nil {
+	fetch := func() error {
+		return c.get(ctx, "/current.json", &r)
+	}
+
+	var err error
+	if c.cache != nil {
+		err = c.cache.Get(c.baseURL+"/current.json", 24*time.Hour, &r, fetch)
+	} else {
+		err = fetch()
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	if r.MRData.RaceTable == nil {

@@ -15,7 +15,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/devkeshwani/termf1/internal/api/liveserver"
+	"github.com/dk-a-dev/termf1/internal/api/liveserver"
 )
 
 const baseURL = "https://livetiming.formula1.com/static/"

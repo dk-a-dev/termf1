@@ -160,3 +160,13 @@ type CarLocation struct {
 	Y            int    `json:"y"`
 	Z            int    `json:"z"`
 }
+
+// Overtake records an incident where one driver passes another.
+type Overtake struct {
+	Date                   string `json:"date"`
+	MeetingKey             int    `json:"meeting_key"`
+	OvertakenDriverNumber  int    `json:"overtaken_driver_number"`
+	OvertakingDriverNumber int    `json:"overtaking_driver_number"`
+	Position               int    `json:"position"`
+	SessionKey             int    `json:"session_key"`
+}
