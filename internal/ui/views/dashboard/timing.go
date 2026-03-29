@@ -127,27 +127,37 @@ func renderLiveRow(r *liveRow) string {
 
 	// 3. Lap Time
 	ltColor := styles.ColorText
-	if r.LastFastest {
+	ltVal := r.LastLap
+	if r.Retired {
+		ltColor = styles.ColorF1Red
+		ltVal = "OUT"
+	} else if r.LastFastest {
 		ltColor = styles.ColorPurple
 	} else if r.LastPersonal {
 		ltColor = styles.ColorGreen
 	}
 	lapTimeCell := lipgloss.NewStyle().Width(colLapTime).
 		Foreground(ltColor).
-		Render(r.LastLap)
+		Render(ltVal)
 
 	// 4. Gap & Interval
+	gapVal := r.GapDisplay()
+	intVal := r.Interval
+	if r.Retired {
+		gapVal = "OUT"
+		intVal = ""
+	}
 	gapCell := lipgloss.NewStyle().Width(colGap).
 		Foreground(styles.ColorTextDim).
-		Render(r.GapDisplay())
+		Render(gapVal)
 
 	intColor := styles.ColorTextDim
-	if r.IntervalCatching {
+	if r.IntervalCatching && !r.Retired {
 		intColor = styles.ColorGreen
 	}
 	intCell := lipgloss.NewStyle().Width(colInt).
 		Foreground(intColor).
-		Render(r.Interval)
+		Render(intVal)
 
 	// 5. Sectors (Status Bars)
 	s1 := renderSectorStatus(r.S1Segs, r.S1Fast, r.S1Personal)
@@ -167,22 +177,27 @@ func renderLiveRow(r *liveRow) string {
 		Render(r.PosDelta)
 
 	// 7. Tyre (Age + Compound)
-	tc := styles.TyreColor(r.Compound)
-	ageStr := fmt.Sprintf("%2d", r.TyreAge)
-	compBadge := " "
-	if r.Compound != "" {
-		label := r.Compound
-		if len(label) > 1 {
-			label = label[:1]
+	tyreCell := lipgloss.NewStyle().Width(colTyre).Render("")
+	if !r.Retired {
+		tc := styles.TyreColor(r.Compound)
+		ageStr := fmt.Sprintf("%2d", r.TyreAge)
+		compBadge := " "
+		if r.Compound != "" {
+			label := r.Compound
+			if len(label) > 1 {
+				label = label[:1]
+			}
+			compBadge = lipgloss.NewStyle().
+				Bold(true).Padding(0, 1).
+				Foreground(lipgloss.Color("#000000")).
+				Background(tc).
+				Render(label)
+		} else {
+			ageStr = "" // Hide age if no compound info
 		}
-		compBadge = lipgloss.NewStyle().
-			Bold(true).Padding(0, 1).
-			Foreground(lipgloss.Color("#000000")).
-			Background(tc).
-			Render(label)
+		tyreCell = lipgloss.NewStyle().Width(colTyre).
+			Render(ageStr + " " + compBadge)
 	}
-	tyreCell := lipgloss.NewStyle().Width(colTyre).
-		Render(ageStr + " " + compBadge)
 
 	// 8. Pit
 	pitStr := ""
