@@ -54,203 +54,195 @@ func (d *Dashboard2) renderLiveTiming(w, h int) string {
 }
 
 // Column widths for the F1-style live timing grid.
-// Total: 4+8+7+7+9+9+10+10+12+12+12+5 = 105 — fits a ~105-col left panel.
+// Global col widths for the live timing panel.
+// Total: 4+8+11+9+9+6+6+6+6+8+4 = 77+ cols.
 const (
-	colPos    = 4
-	colDriver = 8  // " NOR " (5) + "DRS" or "   " (3) = 8
-	colTyre   = 7  // "(H)12 " compound+age
-	colLap    = 7  // "L58 P2"
-	colGap    = 9
-	colInt    = 9
-	colLast   = 10
-	colBest   = 10
-	colSector = 12 // "29.312 ████" time(7)+bar(4)+pad(1) = 12
-	colSpeed  = 5
+	colPos     = 3
+	colDriver  = 8
+	colLapTime = 11
+	colGap     = 9
+	colInt     = 9
+	colS1      = 6
+	colS2      = 6
+	colS3      = 6
+	colChg     = 6
+	colTyre    = 8
+	colPit     = 4
 )
 
 func liveTimingHeader() string {
-	hdrs := []struct{ s string; w int }{
-		{"POS", colPos},
-		{"DRIVER", colDriver},
-		{"TYR", colTyre},
-		{"LAP", colLap},
-		{"    GAP", colGap},
-		{" INTERVAL", colInt},
-		{" LAST LAP", colLast},
-		{" BEST LAP", colBest},
-		{"   S1", colSector},
-		{"   S2", colSector},
-		{"   S3", colSector},
-		{" SPD", colSpeed},
-	}
-	cells := make([]string, len(hdrs))
-	for i, h := range hdrs {
-		cells[i] = lipgloss.NewStyle().Width(h.w).
-			Foreground(styles.ColorSubtle).Bold(true).Render(h.s)
-	}
-	return lipgloss.JoinHorizontal(lipgloss.Top, cells...)
+	h := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(styles.ColorTextDim).
+		Background(styles.ColorBgHeader).
+		Padding(0, 1)
+
+	return lipgloss.JoinHorizontal(lipgloss.Top,
+		h.Width(colPos).Render("POS"),
+		h.Width(colDriver).Render("DRIVER"),
+		h.Width(colLapTime).Render("LAP TIME"),
+		h.Width(colGap).Render("GAP"),
+		h.Width(colInt).Render("INTERVAL"),
+		h.Width(colS1).Align(lipgloss.Center).Render("S1"),
+		h.Width(colS2).Align(lipgloss.Center).Render("S2"),
+		h.Width(colS3).Align(lipgloss.Center).Render("S3"),
+		h.Width(colChg).Align(lipgloss.Center).Render("CHG"),
+		h.Width(colTyre).Render("TYRE"),
+		h.Width(colPit).Render("PIT"),
+	)
 }
 
-// renderSegBar returns a compact coloured segment bar (up to 4 chars wide).
-// Uses segment statuses if available; falls back to sector-level colour.
-func renderSegBar(segs []int, overallFastest, personalFastest bool) string {
-	const barWidth = 4
-	if len(segs) == 0 {
-		// Fallback: solid bar from sector status.
-		if overallFastest {
-			return lipgloss.NewStyle().Foreground(styles.ColorPurple).Render("████")
-		}
-		if personalFastest {
-			return lipgloss.NewStyle().Foreground(styles.ColorGreen).Render("████")
-		}
-		return lipgloss.NewStyle().Foreground(styles.ColorMuted).Render("────")
-	}
-	// Use up to barWidth segments for display.
-	show := segs
-	if len(show) > barWidth {
-		show = show[len(show)-barWidth:]
-	}
-	var sb strings.Builder
-	for _, s := range show {
-		switch s {
-		case 2051: // overall fastest (purple)
-			sb.WriteString(lipgloss.NewStyle().Foreground(styles.ColorPurple).Render("█"))
-		case 2049: // currently overall fastest (green)
-			sb.WriteString(lipgloss.NewStyle().Foreground(styles.ColorGreen).Render("█"))
-		case 2048: // personal best (yellow)
-			sb.WriteString(lipgloss.NewStyle().Foreground(styles.ColorYellow).Render("█"))
-		case 64: // active segment
-			sb.WriteString(lipgloss.NewStyle().Foreground(styles.ColorTextDim).Render("▌"))
-		default:
-			sb.WriteString(lipgloss.NewStyle().Foreground(styles.ColorMuted).Render("─"))
-		}
-	}
-	// Pad to barWidth chars.
-	for i := len(show); i < barWidth; i++ {
-		sb.WriteString(" ")
-	}
-	return sb.String()
-}
+
 
 func renderLiveRow(r *liveRow) string {
-	// 1. Position + change indicator
-	posStr := fmt.Sprintf("%2d", r.Pos)
-	posDelta := ""
-	if r.PrevPos > 0 && r.PrevPos != r.Pos {
-		if r.Pos < r.PrevPos {
-			posDelta = lipgloss.NewStyle().Foreground(styles.ColorGreen).Render("▲")
-		} else {
-			posDelta = lipgloss.NewStyle().Foreground(styles.ColorF1Red).Render("▼")
-		}
+	// 1. Position Rank
+	posColor := styles.ColorText
+	if r.Pos <= 3 && r.Pos > 0 {
+		posColor = styles.ColorYellow
 	}
 	posCell := lipgloss.NewStyle().Width(colPos).
-		Foreground(posColor(r.Pos)).Bold(r.Pos <= 3).
-		Render(posStr + posDelta)
+		Foreground(posColor).Bold(r.Pos <= 3).
+		Render(fmt.Sprintf("%2d", r.Pos))
 
-	// 2. Driver badge (team colour background) + DRS label
+	// 2. Driver badge
 	teamCol := styles.TeamColor(r.TeamName)
 	if r.TeamColour != "" {
 		teamCol = lipgloss.Color("#" + r.TeamColour)
 	}
+	displayTla := r.Tla
+	if displayTla == "" {
+		displayTla = "???"
+	}
 	badge := lipgloss.NewStyle().
 		Background(teamCol).Foreground(lipgloss.Color("#000000")).Bold(true).
-		Render(" " + r.Tla + " ") // 5 visual cols
-	drsLabel := "   "             // 3 spaces
+		Render(" " + fmt.Sprintf("%-3s", displayTla) + " ") // 5 cols
+	drsLabel := "   "
 	if r.DRS >= 10 {
 		drsLabel = lipgloss.NewStyle().
 			Background(styles.ColorGreen).Foreground(lipgloss.Color("#000000")).Bold(true).
-			Render("DRS") // 3 visual cols
+			Render("DRS") // 3 cols
 	}
-	// badge(5) + drsLabel(3) = 8 = colDriver — join then constrain
 	driverCell := lipgloss.NewStyle().Width(colDriver).
 		Render(lipgloss.JoinHorizontal(lipgloss.Top, badge, drsLabel))
 
-	// 3. Tyre compound + age
-	tc := styles.TyreColor(r.Compound)
-	tl := styles.TyreLabel(r.Compound)
-	tyreStr := ""
-	if r.Compound != "" {
-		ageStr := fmt.Sprintf("%d", r.TyreAge)
-		newPip := ""
-		if r.TyreNew {
-			newPip = lipgloss.NewStyle().Foreground(styles.ColorGreen).Render("*")
-		}
-		tyreStr = lipgloss.NewStyle().Foreground(tc).Bold(true).Render("("+tl+")") +
-			styles.DimStyle.Render(ageStr) + newPip
-	} else {
-		tyreStr = styles.DimStyle.Render("  — ")
+	// 3. Lap Time
+	ltColor := styles.ColorText
+	if r.LastFastest {
+		ltColor = styles.ColorPurple
+	} else if r.LastPersonal {
+		ltColor = styles.ColorGreen
 	}
-	tyreCell := lipgloss.NewStyle().Width(colTyre).Render(tyreStr)
+	lapTimeCell := lipgloss.NewStyle().Width(colLapTime).
+		Foreground(ltColor).
+		Render(r.LastLap)
 
-	// 4. Lap + pit count
-	lapStr := ""
-	if r.Laps > 0 {
-		lapStr = fmt.Sprintf("L%2d", r.Laps)
-	}
-	pitStr := ""
-	if r.Retired {
-		pitStr = lipgloss.NewStyle().Foreground(styles.ColorF1Red).Render("OUT")
-	} else if r.InPit {
-		pitStr = lipgloss.NewStyle().Foreground(styles.ColorOrange).Render("PIT")
-	} else if r.PitCount > 0 {
-		pitStr = lipgloss.NewStyle().Foreground(styles.ColorSubtle).Render(fmt.Sprintf("P%d", r.PitCount))
-	}
-	lapCombined := lapStr
-	if pitStr != "" {
-		lapCombined += pitStr
-	}
-	lapCell := lipgloss.NewStyle().Width(colLap).
-		Foreground(styles.ColorTextDim).Render(lapCombined)
+	// 4. Gap & Interval
+	gapCell := lipgloss.NewStyle().Width(colGap).
+		Foreground(styles.ColorTextDim).
+		Render(r.GapDisplay())
 
-	// 5. Gap (spring-animated when numeric)
-	gapStr := r.GapToLeader
-	if r.gapTarget > 0 && r.gapStr == "" {
-		gapStr = fmt.Sprintf("+%.3f", r.gapDisplay)
-	}
-	gapCell := fixedRight(gapStr, colGap, styles.ColorText)
-
-	// 6. Interval
 	intColor := styles.ColorTextDim
 	if r.IntervalCatching {
 		intColor = styles.ColorGreen
 	}
-	intCell := fixedRight(r.Interval, colInt, intColor)
+	intCell := lipgloss.NewStyle().Width(colInt).
+		Foreground(intColor).
+		Render(r.Interval)
 
-	// 7. Last lap
-	lastColor := styles.ColorText
-	if r.LastFastest {
-		lastColor = styles.ColorPurple
-	} else if r.LastPersonal {
-		lastColor = styles.ColorGreen
+	// 5. Sectors (Status Bars)
+	s1 := renderSectorStatus(r.S1Segs, r.S1Fast, r.S1Personal)
+	s2 := renderSectorStatus(r.S2Segs, r.S2Fast, r.S2Personal)
+	s3 := renderSectorStatus(r.S3Segs, r.S3Fast, r.S3Personal)
+
+	// 6. Position Change (CHG)
+	chgColor := styles.ColorTextDim
+	if strings.Contains(r.PosDelta, "↑") {
+		chgColor = styles.ColorGreen
+	} else if strings.Contains(r.PosDelta, "↓") {
+		chgColor = styles.ColorF1Red
 	}
-	lastCell := fixedRight(r.LastLap, colLast, lastColor)
+	chgCell := lipgloss.NewStyle().Width(colChg).
+		Align(lipgloss.Center).
+		Foreground(chgColor).
+		Render(r.PosDelta)
 
-	// 8. Best lap
-	bestCell := fixedRight(r.BestLap, colBest, styles.ColorSubtle)
+	// 7. Tyre (Age + Compound)
+	tc := styles.TyreColor(r.Compound)
+	ageStr := fmt.Sprintf("%2d", r.TyreAge)
+	compBadge := " "
+	if r.Compound != "" {
+		label := r.Compound
+		if len(label) > 1 {
+			label = label[:1]
+		}
+		compBadge = lipgloss.NewStyle().
+			Bold(true).Padding(0, 1).
+			Foreground(lipgloss.Color("#000000")).
+			Background(tc).
+			Render(label)
+	}
+	tyreCell := lipgloss.NewStyle().Width(colTyre).
+		Render(ageStr + " " + compBadge)
 
-	// 9–11. Sectors with mini-segment bars
-	s1Cell := renderSectorCell(r.S1, r.S1Segs, r.S1Fast, r.S1Personal)
-	s2Cell := renderSectorCell(r.S2, r.S2Segs, r.S2Fast, r.S2Personal)
-	s3Cell := renderSectorCell(r.S3, r.S3Segs, r.S3Fast, r.S3Personal)
-
-	// 12. Speed
-	spdCell := fixedRight(r.SpeedST, colSpeed, styles.ColorTextDim)
+	// 8. Pit
+	pitStr := ""
+	if r.PitCount > 0 {
+		pitStr = fmt.Sprintf("%d", r.PitCount)
+	}
+	pitCell := lipgloss.NewStyle().Width(colPit).
+		Align(lipgloss.Center).
+		Foreground(styles.ColorTextDim).
+		Render(pitStr)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top,
-		posCell, driverCell, tyreCell, lapCell,
-		gapCell, intCell, lastCell, bestCell,
-		s1Cell, s2Cell, s3Cell, spdCell,
+		posCell,
+		driverCell,
+		lapTimeCell,
+		gapCell,
+		intCell,
+		lipgloss.NewStyle().Width(colS1).Render(s1),
+		lipgloss.NewStyle().Width(colS2).Render(s2),
+		lipgloss.NewStyle().Width(colS3).Render(s3),
+		chgCell,
+		tyreCell,
+		pitCell,
 	)
 }
 
-// renderSectorCell renders a sector time + mini segment bar in colSector chars.
-// Layout: time(7) + " " + bar(4) = 12 = colSector
-func renderSectorCell(val string, segs []int, overallFastest, personalFastest bool) string {
-	col := sectorColor(overallFastest, personalFastest)
-	timeStr := lipgloss.NewStyle().Width(7).Foreground(col).Render(val)
-	bar := renderSegBar(segs, overallFastest, personalFastest)
-	inner := timeStr + bar // 7 + 4 = 11, padded to colSector(12) below
-	return lipgloss.NewStyle().Width(colSector).Render(inner)
+func renderSectorStatus(segs []int, overall, personal bool) string {
+	if len(segs) == 0 {
+		if overall {
+			return lipgloss.NewStyle().Foreground(styles.ColorPurple).Render("▬▬▬")
+		}
+		if personal {
+			return lipgloss.NewStyle().Foreground(styles.ColorGreen).Render("▬▬▬")
+		}
+		return styles.DimStyle.Render("────")
+	}
+	// Pick the strongest status from segments
+	status := 0
+	for _, s := range segs {
+		if s > status {
+			status = s
+		}
+	}
+	
+	// Professional horizontal bar look: ▬▬▬
+	char := "▬▬▬"
+	col := styles.ColorTextDim
+	switch status {
+	case 2048: // Personal Best
+		col = styles.ColorGreen
+	case 2049, 2051: // Overall Fastest
+		col = styles.ColorPurple
+	case 2052: // Yellow flag in segment
+		col = styles.ColorYellow
+	case 0: // In progress
+		col = styles.ColorTextDim
+		char = "..."
+	}
+	
+	return lipgloss.NewStyle().Foreground(col).Render(char)
 }
 
 func sectorColor(fastest, personal bool) lipgloss.Color {

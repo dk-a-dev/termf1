@@ -1,10 +1,12 @@
 package dashboard
 
 import (
+	"context"
 	"math"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dk-a-dev/termf1/v2/internal/api/jolpica"
 )
 
 // Init starts the spinner, kicks the first fetch, and starts spring ticks.
@@ -12,6 +14,7 @@ func (d *Dashboard2) Init() tea.Cmd {
 	return tea.Batch(
 		d.spin.Tick,
 		d.fetchCmd(),
+		d.fetchDriversCmd(),
 		d.springTickCmd(),
 	)
 }
@@ -32,7 +35,7 @@ func (d *Dashboard2) UpdateDash(msg tea.Msg) (*Dashboard2, tea.Cmd) {
 		d.err = nil
 		d.serverAlive = true
 		d.liveState = msg.state
-		d.liveRows = buildLiveRows(msg.state, d.liveRows)
+		d.liveRows = buildLiveRows(msg.state, d.liveRows, d.drivers)
 		// Only overwrite rcTicker when live state has actual messages; otherwise
 		// the off-season state would blank out the last-race messages we loaded.
 		if live := liveRCMessages(msg.state, 20); len(live) > 0 {
@@ -129,10 +132,29 @@ func (d *Dashboard2) UpdateDash(msg tea.Msg) (*Dashboard2, tea.Cmd) {
 		}
 		return d, nil
 
+	case dashDriversMsg:
+		d.drivers = make(map[string]jolpica.DriverInfo)
+		for _, di := range msg.drivers {
+			if di.PermanentNumber != "" {
+				d.drivers[di.PermanentNumber] = di
+			}
+		}
+		return d, nil
+
 	case dashCircuitMsg2:
 		d.circuit = msg.circuit
 		return d, nil
 	}
 
 	return d, nil
+}
+
+func (d *Dashboard2) fetchDriversCmd() tea.Cmd {
+	return func() tea.Msg {
+		drivers, err := d.joli.GetDrivers(context.Background())
+		if err != nil {
+			return nil
+		}
+		return dashDriversMsg{drivers}
+	}
 }

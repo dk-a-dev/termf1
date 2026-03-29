@@ -6,9 +6,10 @@ type MRData struct {
 	URL           string        `json:"url"`
 	Limit         string        `json:"limit"`
 	Offset        string        `json:"offset"`
-	Total         string        `json:"total"`
-	RaceTable     *RaceTable    `json:"RaceTable,omitempty"`
+	Total          string          `json:"total"`
+	RaceTable      *RaceTable      `json:"RaceTable,omitempty"`
 	StandingsTable *StandingsTable `json:"StandingsTable,omitempty"`
+	DriverTable    *DriverTable    `json:"DriverTable,omitempty"`
 }
 
 type Response struct {
@@ -111,4 +112,11 @@ type ConstructorInfo struct {
 	ConstructorID string `json:"constructorId"`
 	Name          string `json:"name"`
 	Nationality   string `json:"nationality"`
+}
+
+// --- Drivers -----------------------------------------------------------------
+
+type DriverTable struct {
+	Season  string       `json:"season"`
+	Drivers []DriverInfo `json:"Drivers"`
 }

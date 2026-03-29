@@ -112,3 +112,26 @@ func (c *Client) GetSchedule(ctx context.Context) ([]Race, error) {
 	}
 	return r.MRData.RaceTable.Races, nil
 }
+
+// GetDrivers returns the list of drivers for the current season.
+func (c *Client) GetDrivers(ctx context.Context) ([]DriverInfo, error) {
+	var r Response
+	fetch := func() error {
+		return c.get(ctx, "/current/drivers.json", &r)
+	}
+
+	var err error
+	if c.cache != nil {
+		err = c.cache.Get(c.baseURL+"/current/drivers.json", 24*time.Hour, &r, fetch)
+	} else {
+		err = fetch()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	if r.MRData.DriverTable == nil {
+		return nil, nil
+	}
+	return r.MRData.DriverTable.Drivers, nil
+}

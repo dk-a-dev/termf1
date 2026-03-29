@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -17,6 +18,7 @@ import (
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 type dashLiveMsg struct{ state *liveserver.State }
+type dashDriversMsg struct{ drivers []jolpica.DriverInfo }
 type dashFallbackMsg struct{ payload *openf1.DashboardPayload }
 type dashIdleFallbackMsg struct{ payload *openf1.DashboardPayload } // server alive but no live session
 type dashErrMsg2 struct{ err error }
@@ -29,9 +31,12 @@ type dashCircuitMsg2 struct{ circuit *multiviewer.Circuit }
 // liveRow is the view-model for one car in the live timing panel.
 type liveRow struct {
 	Pos            int
+	PosDelta       string // gain/loss indicator (e.g., "↑ 2")
+	StartPos       int    // position at session start/grid
 	PrevPos        int // position on last update (0 = same/unknown)
 	Number         string
 	Tla            string
+	Name           string // full driver name
 	TeamName       string
 	TeamColour     string
 	GapToLeader    string
@@ -61,6 +66,16 @@ type liveRow struct {
 	gapDisplay float64
 	gapTarget  float64
 	gapStr     string // non-numeric gap (e.g. "LEADER", "+1 LAP")
+}
+
+func (r *liveRow) GapDisplay() string {
+	if r.gapStr != "" {
+		return r.gapStr
+	}
+	if r.gapTarget > 0 {
+		return fmt.Sprintf("+%.3f", r.gapDisplay)
+	}
+	return r.GapToLeader
 }
 
 // fallbackRow is the view-model for one car in the historical results panel.
@@ -106,6 +121,7 @@ type Dashboard2 struct {
 	err         error
 	serverAlive bool
 	liveState   *liveserver.State
+	drivers     map[string]jolpica.DriverInfo // dynamic driver data from API
 	fallback    *openf1.DashboardPayload
 	liveRows    []liveRow
 	fbRows      []fallbackRow

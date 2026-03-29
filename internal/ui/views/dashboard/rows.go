@@ -1,18 +1,21 @@
 package dashboard
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/charmbracelet/harmonica"
+	"github.com/dk-a-dev/termf1/v2/internal/api/jolpica"
 	"github.com/dk-a-dev/termf1/v2/internal/api/liveserver"
 	"github.com/dk-a-dev/termf1/v2/internal/api/openf1"
 )
 
 // buildLiveRows converts a live State snapshot into sorted liveRow slice,
 // reusing harmonica spring state from the previous frame for smooth gap animation.
-func buildLiveRows(st *liveserver.State, prev []liveRow) []liveRow {
+func buildLiveRows(st *liveserver.State, prev []liveRow, drivers map[string]jolpica.DriverInfo) []liveRow {
 	if st == nil || len(st.Timing) == 0 {
 		return nil
 	}
@@ -28,10 +31,44 @@ func buildLiveRows(st *liveserver.State, prev []liveRow) []liveRow {
 		tla := num
 		teamName := ""
 		teamColour := ""
+		name := num // Default to racing number if no info
 		if di != nil {
-			tla = di.Tla
+			if di.Tla != "" {
+				tla = di.Tla
+			} else if len(di.BroadcastName) >= 3 {
+				tla = di.BroadcastName[:3]
+			} else if len(di.FullName) >= 3 {
+				tla = di.FullName[:3]
+			}
+
+			// Clean up names (remove leading spaces)
+			if di.FullName != "" {
+				name = strings.TrimSpace(di.FullName)
+			} else if di.BroadcastName != "" {
+				name = strings.TrimSpace(di.BroadcastName)
+			}
 			teamName = di.TeamName
 			teamColour = di.TeamColour
+		}
+
+		// Tier-1 fallback: check dynamic API mapping (jolpica)
+		if dInfo, ok := drivers[num]; ok {
+			if tla == num || tla == "" || tla == "???" {
+				tla = dInfo.Code
+			}
+			if name == num || name == "" {
+				name = dInfo.GivenName + " " + dInfo.FamilyName
+			}
+		}
+
+		// Tier-2 fallback: check static mapping for TLA and Name
+		if s, ok := StaticDrivers[num]; ok {
+			if tla == num || tla == "" || tla == "???" {
+				tla = s.Tla
+			}
+			if name == num || name == "" {
+				name = s.Name
+			}
 		}
 
 		s1, s2, s3 := "", "", ""
@@ -77,6 +114,25 @@ func buildLiveRows(st *liveserver.State, prev []liveRow) []liveRow {
 			}
 		}
 
+		// LOG RAW JSON FOR DEBUGGING (only one driver to keep log small)
+		if num == "43" { // Log for driver 43 (ALB) or any active driver
+			bj, _ := json.Marshal(t)
+			f, _ := os.OpenFile("/tmp/termf1_raw.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if f != nil {
+				fmt.Fprintf(f, "Driver %s: %s\n", num, string(bj))
+				f.Close()
+			}
+		}
+
+		// LOG STATUS CODES FOR DEBUGGING
+		f, _ := os.OpenFile("/tmp/termf1_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if f != nil {
+			fmt.Fprintf(f, "Driver %s: S1:%v (F:%v P:%v) S2:%v (F:%v P:%v) S3:%v (F:%v P:%v) TYRE:%s L:%d NEW:%v\n",
+				num, s1Segs, s1Fast, s1Personal, s2Segs, s2Fast, s2Personal, s3Segs, s3Fast, s3Personal,
+				compound, tyreAge, tyreNew)
+			f.Close()
+		}
+
 		// DRS status from CarData channel 45: 10/12/14 = open.
 		drs := 0
 		if st.CarData != nil {
@@ -89,6 +145,7 @@ func buildLiveRows(st *liveserver.State, prev []liveRow) []liveRow {
 			Pos:              t.Line,
 			Number:           num,
 			Tla:              tla,
+			Name:             name,
 			TeamName:         teamName,
 			TeamColour:       teamColour,
 			GapToLeader:      t.GapToLeader,
@@ -117,18 +174,39 @@ func buildLiveRows(st *liveserver.State, prev []liveRow) []liveRow {
 		if p, ok := prevMap[num]; ok {
 			r.gapSpring = p.gapSpring
 			r.gapDisplay = p.gapDisplay
+			r.StartPos = p.StartPos // Carry over session-start position
 			// Carry previous position so we can show ▲/▼ in the UI.
 			if p.Pos != r.Pos && p.Pos > 0 {
 				r.PrevPos = p.Pos
 			}
 		} else {
 			r.gapSpring = harmonica.NewSpring(harmonica.FPS(60), 6, 0.6)
+			// First time we see this driver in this session:
+			// r.Pos might be 0 if the driver is not on track or no data yet.
+			r.StartPos = r.Pos
+		}
+
+		// Ensure StartPos is non-zero if we have a current Pos.
+		if r.StartPos == 0 && r.Pos > 0 {
+			r.StartPos = r.Pos
 		}
 		if gapF, err := parseGapFloat(t.GapToLeader); err == nil {
 			r.gapTarget = gapF
 			r.gapStr = ""
 		} else {
 			r.gapStr = t.GapToLeader
+		}
+
+		// Calculate PosDelta
+		if r.StartPos > 0 && r.Pos > 0 {
+			diff := r.StartPos - r.Pos
+			if diff > 0 {
+				r.PosDelta = fmt.Sprintf("↑ %d", diff)
+			} else if diff < 0 {
+				r.PosDelta = fmt.Sprintf("↓ %d", -diff)
+			} else {
+				r.PosDelta = "- 0"
+			}
 		}
 
 		rows = append(rows, r)
